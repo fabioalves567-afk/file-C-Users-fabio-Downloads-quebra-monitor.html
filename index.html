@@ -1573,5 +1573,62 @@ function showToast(msg,isErr=false){
   const el=document.getElementById('toast');el.textContent=msg;el.className='toast show'+(isErr?' err':'');setTimeout(()=>el.className='toast',3000);
 }
 </script>
+  <script>
+const params = new URLSearchParams(window.location.search);
+
+const equip = params.get("equip");
+const lado = params.get("lado");
+const maq = params.get("maq");
+
+window.addEventListener("load", () => {
+
+  // EQUIPAMENTO
+  if(equip){
+    document.getElementById("regEquip").value = equip;
+
+    document.querySelectorAll("#equipToggle .equip-btn").forEach(btn=>{
+      btn.classList.remove("active");
+
+      if(btn.dataset.val === equip){
+        btn.classList.add("active");
+      }
+    });
+  }
+
+  // LADO
+  if(lado){
+
+    if(lado.toLowerCase() === "direito"){
+      setLado("Lado Direito");
+    }
+
+    if(lado.toLowerCase() === "esquerdo"){
+      setLado("Lado Esquerdo");
+    }
+
+    if(lado.toLowerCase() === "skillit"){
+      setLado("Skillit");
+    }
+  }
+
+  // MÁQUINA
+  if(maq){
+
+    const maquina = maquinas.find(m =>
+      m.name.toLowerCase().includes(maq.toLowerCase())
+    );
+
+    if(maquina){
+
+      document.getElementById("regMaquina").value = maquina.id;
+
+      document.getElementById("maqSelectedName").textContent = maquina.name;
+
+      document.getElementById("maqSelectedBar").style.display = "flex";
+    }
+  }
+
+});
+</script>
 </body>
 </html>
