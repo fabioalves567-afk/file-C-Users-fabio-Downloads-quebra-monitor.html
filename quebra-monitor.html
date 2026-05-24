@@ -1,0 +1,1577 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mapeamento de Quebras — Fahrwerk</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f0f2f6;--surface:#fff;--surface2:#f7f8fb;--border:#e4e8ef;--border2:#d1d9e6;--blue:#1a56db;--blue-light:#ebf5ff;--blue-mid:#3b82f6;--blue-dark:#1e40af;--amber:#d97706;--amber-light:#fef3c7;--amber-mid:#f59e0b;--red:#dc2626;--red-light:#fef2f2;--green:#16a34a;--green-light:#f0fdf4;--text:#111827;--text2:#4b5563;--text3:#9ca3af;--shadow-sm:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);--shadow:0 4px 12px rgba(0,0,0,.06),0 1px 3px rgba(0,0,0,.04);--shadow-lg:0 10px 30px rgba(0,0,0,.08);--radius:10px;--radius-lg:14px;--radius-xl:18px;}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{max-width:100%;overflow-x:hidden;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;overflow-x:hidden;width:100%;}
+.header{background:var(--blue-dark);padding:0 12px;display:flex;align-items:center;gap:8px;height:54px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(30,64,175,.25);width:100%;max-width:100vw;overflow:hidden;}
+.header-logo{font-family:'Syne',sans-serif;font-size:13px;font-weight:800;color:#fff;display:flex;align-items:center;gap:6px;letter-spacing:.1px;flex-shrink:0;white-space:nowrap;}
+.header-logo .dot{width:8px;height:8px;border-radius:50%;background:var(--amber-mid);display:inline-block;}
+.header-badge{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.75);font-size:11px;font-weight:500;padding:3px 10px;border-radius:20px;}
+.header-info{flex:1;min-width:0;max-width:calc(100vw - 220px);font-size:10px;color:rgba(255,255,255,.75);line-height:1.4;overflow:hidden;}
+.header-info strong{color:#fff;display:block;font-size:11px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.header-info span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;}
+.header-right{display:flex;align-items:center;gap:6px;flex-shrink:0;}
+@media(max-width:520px){
+  .header{height:auto;min-height:44px;flex-wrap:wrap;padding:7px 12px;row-gap:6px;}
+  .header-logo{flex:1;font-size:12px;}
+  .header-info{display:none;}
+  .header-right{order:2;width:100%;justify-content:flex-end;padding-bottom:3px;}
+  .btn-label{display:none;}
+  .header-clock{font-size:13px;}
+}
+.btn-backup{background:#6d28d9;border:1.5px solid #7c3aed;color:#fff;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;padding:6px 10px;border-radius:7px;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;flex-shrink:0;}
+.btn-backup:hover{background:#5b21b6;}
+.btn-backup:active{transform:scale(.97);}
+.header-clock{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:#fff;letter-spacing:.5px;white-space:nowrap;}
+.header-date{font-size:9px;color:rgba(255,255,255,.55);white-space:nowrap;text-align:right;}
+.tabs{background:var(--surface);border-bottom:1px solid var(--border);display:flex;padding:0 8px;overflow-x:auto;box-shadow:var(--shadow-sm);width:100%;max-width:100vw;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+.tab-btn{background:none;border:none;color:var(--text3);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;padding:12px 14px 11px;cursor:pointer;border-bottom:2px solid transparent;transition:all .18s;white-space:nowrap;display:flex;align-items:center;gap:5px;flex-shrink:0;}
+.tab-btn:hover{color:var(--text);}
+.tab-btn.active{color:var(--blue);border-bottom-color:var(--blue);font-weight:600;}
+.view{display:none;padding:14px;max-width:100%;margin:0 auto;}
+.view.active{display:block;}
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:14px;margin-bottom:24px;}
+.metric{background:var(--surface);border-radius:var(--radius-lg);padding:18px 20px;box-shadow:var(--shadow-sm);border:1px solid var(--border);position:relative;overflow:hidden;}
+.metric::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:14px 14px 0 0;}
+.metric.c-blue::before{background:var(--blue-mid);}
+.metric.c-red::before{background:var(--red);}
+.metric.c-amber::before{background:var(--amber-mid);}
+.metric.c-green::before{background:var(--green);}
+.metric-label{font-size:11px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;}
+.metric-value{font-family:'Syne',sans-serif;font-size:34px;font-weight:800;line-height:1;color:var(--text);}
+.metric-sub{font-size:11px;color:var(--text3);margin-top:5px;}
+.section-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text2);margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.card{background:var(--surface);border-radius:var(--radius-xl);padding:18px;margin-bottom:16px;box-shadow:var(--shadow);border:1px solid var(--border);max-width:100%;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.form-group{display:flex;flex-direction:column;gap:6px;}
+.form-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--text2);}
+.form-input,.form-select,.form-textarea{background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;padding:10px 13px;outline:none;transition:all .18s;width:100%;-webkit-appearance:none;}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--blue-mid);background:#fff;box-shadow:0 0 0 3px rgba(59,130,246,.1);}
+.form-textarea{resize:vertical;min-height:72px;}
+.datetime-box{background:var(--blue-light);border:1.5px solid #bfdbfe;border-radius:var(--radius);padding:10px 14px;font-family:'Syne',sans-serif;font-size:17px;font-weight:700;color:var(--blue-dark);letter-spacing:.5px;}
+.btn{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;padding:9px 18px;border-radius:var(--radius);border:none;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;}
+.btn:active{transform:scale(.97);}
+.btn-primary{background:var(--blue);color:#fff;box-shadow:0 2px 8px rgba(26,86,219,.3);}
+.btn-primary:hover{background:var(--blue-dark);}
+.btn-success{background:var(--green);color:#fff;box-shadow:0 2px 8px rgba(22,163,74,.3);}
+.btn-success:hover{background:#15803d;}
+.btn-danger{background:var(--red-light);color:var(--red);border:1.5px solid #fecaca;}
+.btn-danger:hover{background:#fee2e2;}
+.btn-ghost{background:var(--surface);color:var(--text2);border:1.5px solid var(--border2);}
+.btn-ghost:hover{background:var(--surface2);color:var(--text);}
+.btn-wa{background:#dcfce7;color:#15803d;border:1.5px solid #bbf7d0;}
+.btn-wa:hover{background:#bbf7d0;}
+.btn-print{background:var(--blue-light);color:var(--blue-dark);border:1.5px solid #bfdbfe;}
+.btn-print:hover{background:#dbeafe;}
+.btn-amber{background:var(--amber-light);color:#92400e;border:1.5px solid #fde68a;}
+.btn-amber:hover{background:#fde68a;}
+.btn-sm{padding:6px 13px;font-size:12px;border-radius:8px;}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;}
+.action-bar{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:8px 10px;display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;align-items:center;overflow-x:auto;max-width:100%;}
+.equip-toggle{display:flex;gap:8px;flex-wrap:wrap;}
+.equip-btn{flex:1;min-width:fit-content;padding:9px 12px;border-radius:var(--radius);border:1.5px solid var(--border2);background:var(--surface2);color:var(--text2);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .18s;text-align:center;}
+.equip-btn:hover{border-color:var(--blue-mid);color:var(--blue);}
+.equip-btn.active{background:var(--blue-light);border-color:var(--blue-mid);color:var(--blue-dark);}
+.ranking-list{display:flex;flex-direction:column;gap:10px;margin-bottom:24px;max-width:100%;}
+.ranking-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 18px;display:flex;align-items:center;gap:14px;box-shadow:var(--shadow-sm);}
+.rank-pos{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;min-width:30px;color:var(--text3);}
+.rank-pos.p1{color:var(--amber-mid);}
+.rank-pos.p2{color:#9ca3af;}
+.rank-pos.p3{color:#cd7f32;}
+.rank-info{flex:1;min-width:0;}
+.rank-name{font-weight:600;font-size:14px;color:var(--text);}
+.rank-op{font-size:11px;color:var(--text3);margin-top:2px;}
+.rank-bar-col{width:130px;}
+.rank-bar-bg{background:#f1f3f7;border-radius:6px;height:6px;}
+.rank-bar-fill{background:linear-gradient(90deg,var(--blue-mid),var(--blue));border-radius:6px;height:6px;transition:width .5s;}
+.rank-stats{text-align:right;min-width:70px;}
+.rank-count{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--blue);line-height:1;}
+.rank-vcls{font-size:11px;color:var(--text3);margin-top:2px;}
+.table-wrap{overflow-x:auto;border-radius:var(--radius-lg);border:1px solid var(--border);box-shadow:var(--shadow-sm);max-width:100%;width:100%;}
+table{width:100%;border-collapse:collapse;font-size:13px;background:var(--surface);}
+th{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--text3);border-bottom:1px solid var(--border);padding:10px 12px;text-align:left;background:var(--surface2);}
+td{padding:9px 12px;border-bottom:1px solid var(--border);color:var(--text2);vertical-align:middle;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover td{background:#fafbfd;}
+.badge{display:inline-flex;align-items:center;font-size:10px;font-weight:600;padding:3px 9px;border-radius:20px;letter-spacing:.4px;white-space:nowrap;}
+.b-red{background:var(--red-light);color:var(--red);border:1px solid #fecaca;}
+.b-amber{background:var(--amber-light);color:#92400e;border:1px solid #fde68a;}
+.b-blue{background:var(--blue-light);color:var(--blue-dark);border:1px solid #bfdbfe;}
+.b-green{background:var(--green-light);color:#15803d;border:1px solid #bbf7d0;}
+.b-purple{background:#f5f3ff;color:#6d28d9;border:1px solid #ddd6fe;}
+.config-list{display:flex;flex-direction:column;gap:8px;}
+.config-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:11px 16px;display:flex;align-items:center;gap:10px;box-shadow:var(--shadow-sm);}
+.config-name{flex:1;font-weight:500;font-size:13px;}
+.config-meta{font-size:11px;color:var(--text3);}
+.alert-top{background:var(--red-light);border:1px solid #fecaca;border-radius:var(--radius);padding:11px 16px;font-size:13px;font-weight:500;color:var(--red);margin-bottom:16px;display:none;}
+.alert-top.visible{display:block;}
+.filter-bar{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center;}
+.filter-bar .form-select{flex:1;min-width:140px;}
+.filter-bar .form-input{flex:1;min-width:130px;}
+.empty{text-align:center;padding:48px 24px;color:var(--text3);}
+.empty-icon{font-size:36px;margin-bottom:12px;opacity:.6;}
+.last-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:14px;}
+.last-field{background:var(--surface2);border-radius:var(--radius);padding:12px 14px;border:1px solid var(--border);}
+.last-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--text3);margin-bottom:5px;}
+.last-value{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--text);line-height:1.2;}
+.last-sub{font-size:11px;color:var(--text3);margin-top:3px;}
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:none;align-items:center;justify-content:center;padding:12px;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--surface);border-radius:var(--radius-xl);padding:18px;width:calc(100vw - 24px);max-width:620px;box-shadow:var(--shadow-lg);max-height:90vh;overflow-y:auto;}
+.modal-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--text);margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;}
+.modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3);padding:0 4px;line-height:1;}
+.modal-close:hover{color:var(--text);}
+/* EQUIP MANAGE */
+.equip-manage-list{display:flex;flex-direction:column;gap:6px;margin-bottom:12px;}
+.equip-manage-item{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;}
+.equip-manage-item span{flex:1;font-size:13px;font-weight:500;}
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--blue);border-radius:var(--radius);padding:14px 18px;font-size:13px;font-weight:500;color:var(--text);z-index:999;opacity:0;transform:translateY(8px);transition:all .25s;max-width:300px;box-shadow:var(--shadow-lg);}
+.toast.show{opacity:1;transform:translateY(0);}
+.toast.err{border-left-color:var(--red);}
+.divider{height:1px;background:var(--border);margin:20px 0;}
+.cfg-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+@media(max-width:640px){.form-grid{grid-template-columns:1fr;}.cfg-grid{grid-template-columns:1fr;}.rank-bar-col{display:none;}.last-grid{grid-template-columns:1fr 1fr;}.view{padding:10px;}}
+/* FAB removido — backup acessível pelo botão do header */
+/* BOTÕES NUMÉRICOS DE POSIÇÃO */
+.num-toggle{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;}
+/* KPI EQUIPAMENTOS CRÍTICOS */
+.kpi-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:28px;}
+.kpi-card{background:var(--surface);border:1.5px solid var(--kpi-border,var(--border));border-radius:16px;padding:18px 16px 14px;position:relative;overflow:hidden;cursor:default;transition:transform .22s cubic-bezier(.4,0,.2,1),box-shadow .22s;animation:kpi-fadein .45s ease both;box-shadow:var(--kpi-glow,var(--shadow-sm));}
+.kpi-card::before{content:'';position:absolute;inset:0;background:var(--kpi-bg,transparent);border-radius:inherit;pointer-events:none;}
+.kpi-card::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--kpi-color,var(--blue-mid));border-radius:14px 14px 0 0;}
+.kpi-card:hover{transform:translateY(-4px);box-shadow:var(--kpi-glow,var(--shadow-lg)),0 10px 28px rgba(0,0,0,.1);}
+.kpi-pulse{animation:kpi-fadein .45s ease both,kpi-glow-pulse 2.2s ease-in-out infinite!important;}
+@keyframes kpi-fadein{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+@keyframes kpi-glow-pulse{0%,100%{box-shadow:var(--kpi-glow);}50%{box-shadow:0 0 0 3px var(--kpi-border),var(--kpi-glow);}}
+.kpi-top-row{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;}
+.kpi-icon-wrap{font-size:26px;line-height:1;filter:drop-shadow(0 2px 4px rgba(0,0,0,.12));}
+.kpi-status-badge{font-size:8.5px;font-weight:800;letter-spacing:.9px;padding:3px 8px;border-radius:20px;border:1px solid;text-transform:uppercase;line-height:1.4;}
+.kpi-main-value{font-family:'Syne',sans-serif;font-size:52px;font-weight:800;line-height:1;color:var(--kpi-color,var(--text));margin-bottom:2px;position:relative;z-index:1;}
+.kpi-equip-name{font-size:11px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.7px;margin-bottom:2px;position:relative;z-index:1;}
+.kpi-machine-name{font-size:11px;color:var(--text3);margin-bottom:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;position:relative;z-index:1;}
+.kpi-bar-track{background:var(--surface2);border-radius:6px;height:4px;margin-bottom:10px;overflow:hidden;position:relative;z-index:1;}
+.kpi-bar-fill{height:4px;border-radius:6px;transition:width .7s cubic-bezier(.4,0,.2,1);}
+.kpi-footer-row{display:flex;align-items:center;justify-content:space-between;position:relative;z-index:1;}
+.kpi-count-text{font-size:10.5px;color:var(--text3);font-weight:500;}
+.kpi-trend{font-size:10.5px;font-weight:700;}
+/* NFC */
+.btn-nfc{background:linear-gradient(135deg,#001e50,#0040c1);color:#fff;border:none;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;padding:8px 13px;border-radius:var(--radius);cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all .18s;box-shadow:0 2px 8px rgba(0,64,193,.3);flex-shrink:0;}
+.btn-nfc:hover{background:linear-gradient(135deg,#0040c1,#2563eb);}
+.btn-nfc:active{transform:scale(.97);}
+.btn-nfc.scanning{animation:nfc-ping 1.2s ease-in-out infinite;}
+@keyframes nfc-ping{0%,100%{box-shadow:0 0 0 0 rgba(0,64,193,.5);}50%{box-shadow:0 0 0 8px rgba(0,64,193,0);}}
+/* MACHINE PICKER */
+.maq-picker{border:1.5px solid var(--border2);border-radius:var(--radius-lg);overflow:visible;background:var(--surface);}
+.maq-mode-row{display:flex;border-bottom:1px solid var(--border);}
+.maq-mode-btn{flex:1;background:none;border:none;padding:8px 6px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;color:var(--text3);cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:5px;}
+.maq-mode-btn:first-child{border-radius:10px 0 0 0;}
+.maq-mode-btn:last-child{border-radius:0 10px 0 0;}
+.maq-mode-btn.active{color:var(--blue);background:var(--blue-light);border-bottom:2px solid var(--blue);}
+.maq-mode-btn:not(.active):hover{background:var(--surface2);color:var(--text);}
+.maq-search-panel{padding:8px;}
+.maq-search-wrap{position:relative;margin-bottom:6px;}
+.maq-search-input{width:100%;padding:8px 32px 8px 10px;border:1.5px solid var(--border2);border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:13px;background:var(--surface2);color:var(--text);outline:none;transition:border .15s;}
+.maq-search-input:focus{border-color:var(--blue-mid);background:var(--surface);}
+.maq-search-clear{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text3);font-size:15px;cursor:pointer;padding:2px;line-height:1;}
+.maq-search-clear:hover{color:var(--text);}
+.maq-results{max-height:150px;overflow-y:auto;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);display:none;}
+.maq-results.open{display:block;}
+.maq-result-item{padding:9px 12px;font-size:13px;cursor:pointer;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:2px;transition:background .12s;}
+.maq-result-item:last-child{border-bottom:none;}
+.maq-result-item:hover{background:var(--blue-light);}
+.maq-result-item.sel{background:var(--blue-light);border-left:3px solid var(--blue-mid);}
+.maq-result-name{font-weight:600;color:var(--text);}
+.maq-result-sub{font-size:11px;color:var(--text3);}
+.maq-selected-bar{display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--blue-light);border-top:1px solid var(--border);border-radius:0 0 10px 10px;}
+.maq-selected-name{flex:1;font-size:12px;font-weight:600;color:var(--blue-dark);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.maq-selected-x{background:none;border:none;color:var(--blue-dark);cursor:pointer;font-size:14px;padding:0 2px;opacity:.7;}
+.maq-selected-x:hover{opacity:1;}
+.maq-nfc-panel{padding:14px 8px;text-align:center;}
+.maq-nfc-icon{font-size:32px;margin-bottom:6px;line-height:1;}
+.maq-nfc-status{font-size:11px;color:var(--text3);margin-bottom:10px;min-height:16px;}
+.maq-nfc-scan-btn{background:linear-gradient(135deg,#001e50,#0040c1);color:#fff;border:none;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;padding:10px 20px;border-radius:var(--radius);cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .18s;box-shadow:0 2px 8px rgba(0,64,193,.3);}
+.maq-nfc-scan-btn:hover{background:linear-gradient(135deg,#0040c1,#2563eb);}
+.maq-nfc-scan-btn.scanning{animation:nfc-ping 1.2s ease-in-out infinite;}
+@media(max-width:520px){.kpi-grid{grid-template-columns:1fr;}.kpi-main-value{font-size:58px;}.kpi-equip-name,.kpi-machine-name{text-align:left;}}
+.num-btn{width:34px;height:34px;border-radius:7px;border:1.5px solid var(--border2);background:var(--surface2);color:var(--text2);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.num-btn:hover{border-color:var(--blue-mid);color:var(--blue);}
+.num-btn.active{background:var(--blue-light);border-color:var(--blue-mid);color:var(--blue-dark);font-weight:700;}
+.num-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;color:var(--text3);margin-top:8px;margin-bottom:4px;}
+/* MODAL BACKUP */
+.backup-section{margin-bottom:18px;}
+.backup-section-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);}
+.storage-bar-wrap{background:var(--surface2);border-radius:8px;height:10px;margin:8px 0;}
+.storage-bar-fill{background:linear-gradient(90deg,var(--blue-mid),#6d28d9);border-radius:8px;height:10px;transition:width .4s;}
+.storage-info{display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:4px;}
+.backup-btn-row{display:flex;flex-direction:column;gap:8px;}
+.btn-dark{background:#1f2937;color:#fff;border:none;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;padding:11px 18px;border-radius:var(--radius);cursor:pointer;display:flex;align-items:center;gap:8px;transition:all .15s;}
+.btn-dark:hover{background:#111827;}
+.btn-purple{background:#6d28d9;color:#fff;border:none;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;padding:11px 18px;border-radius:var(--radius);cursor:pointer;display:flex;align-items:center;gap:8px;transition:all .15s;box-shadow:0 2px 8px rgba(109,40,217,.3);}
+.btn-purple:hover{background:#5b21b6;}
+.btn-outline-restore{background:var(--surface);color:var(--text2);border:1.5px solid var(--border2);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;padding:11px 18px;border-radius:var(--radius);cursor:pointer;display:flex;align-items:center;gap:8px;transition:all .15s;}
+.btn-outline-restore:hover{background:var(--surface2);}
+/* MODAL ATUALIZAÇÃO */
+.update-version-row{display:flex;align-items:center;justify-content:center;gap:16px;margin:18px 0;padding:16px;background:var(--surface2);border-radius:var(--radius-lg);border:1px solid var(--border);}
+.update-ver-box{text-align:center;}
+.update-ver-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text3);margin-bottom:6px;}
+.update-ver-value{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:var(--text);}
+.update-ver-value.new{color:var(--green);}
+.update-arrow{font-size:22px;color:var(--text3);}
+.update-note{font-size:12px;color:var(--text3);text-align:center;margin-bottom:16px;line-height:1.5;}
+.btn-update-apply{background:var(--green);color:#fff;border:none;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;padding:13px 20px;border-radius:var(--radius);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;width:100%;transition:all .15s;box-shadow:0 2px 8px rgba(22,163,74,.3);}
+.btn-update-apply:hover{background:#15803d;}
+.btn-update-cancel{background:var(--surface);color:var(--text2);border:1.5px solid var(--border2);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;padding:10px 20px;border-radius:var(--radius);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:8px;transition:all .15s;}
+.btn-update-cancel:hover{background:var(--surface2);}
+/* BOTÃO ATUALIZAR HEADER */
+.btn-update-header{background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.3);color:#fff;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;padding:6px 10px;border-radius:7px;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;flex-shrink:0;}
+.btn-update-header:hover{background:rgba(255,255,255,.22);}
+.btn-update-header:active{transform:scale(.97);}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-logo"><span class="dot"></span>MAPEAMENTO DE QUEBRAS</div>
+  <div id="headerInfo" class="header-info"></div>
+  <div class="header-right">
+    <button class="btn-update-header" id="btnHeaderUpdate">🔄 <span class="btn-label">Atualizar</span></button>
+    <button class="btn-backup" id="btnHeaderBackup">💾 <span class="btn-label">Backup</span></button>
+    <div style="text-align:right;flex-shrink:0">
+      <div class="header-clock" id="liveTime">--:--:--</div>
+      <div class="header-date" id="liveDate">--/--/----</div>
+    </div>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab-btn active" id="tabRegister" onclick="switchTab('register',this)">📋 Registrar</button>
+  <button class="tab-btn" onclick="switchTab('dashboard',this)">📊 Dashboard</button>
+  <button class="tab-btn" onclick="switchTab('history',this)">🗂 Histórico</button>
+  <button class="tab-btn" onclick="switchTab('config',this)">⚙️ Configurações</button>
+</div>
+
+<!-- ══════════ REGISTRAR ══════════ -->
+<div class="view active" id="view-register">
+  <div id="alertBanner" class="alert-top">⚠ Selecione a máquina e o tipo de quebra antes de registrar.</div>
+  <div class="card">
+    <div class="section-title">Nova Ocorrência — Mapeamento de Quebras</div>
+
+    <div class="form-grid" style="margin-bottom:18px">
+      <div class="form-group">
+        <div class="form-label">📅 Data / Hora (automático)</div>
+        <div class="datetime-box" id="regDatetime">--/-- --:--:--</div>
+      </div>
+      <div class="form-group">
+        <div class="form-label">🏭 Turno</div>
+        <select class="form-select" id="regTurno">
+          <option value="1º Turno">1º Turno</option>
+          <option value="2º Turno" selected>2º Turno</option>
+          <option value="3º Turno">3º Turno</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-grid" style="margin-bottom:18px">
+      <div class="form-group">
+        <div class="form-label" style="display:flex;align-items:center;justify-content:space-between">
+          🔩 Tipo de Equipamento *
+          <button class="btn btn-ghost btn-sm" id="btnManageEquip" style="font-size:10px;padding:3px 8px">✏️ Editar</button>
+        </div>
+        <div class="equip-toggle" id="equipToggle"></div>
+        <input type="hidden" id="regEquip" value="">
+      </div>
+      <div class="form-group">
+        <div class="form-label">↔ Lado *</div>
+        <div class="equip-toggle">
+          <button type="button" class="equip-btn" id="ladoBtnE">Lado Esquerdo</button>
+          <button type="button" class="equip-btn active" id="ladoBtnD">Lado Direito</button>
+          <button type="button" class="equip-btn" id="ladoBtnS">Skillit</button>
+        </div>
+        <div class="num-label">↳ Posição (opcional)</div>
+        <div class="num-toggle" id="numToggle"></div>
+        <input type="hidden" id="regLadoNum" value="">
+        <input type="hidden" id="regLado" value="Lado Direito">
+      </div>
+    </div>
+
+    <div class="form-grid" style="margin-bottom:18px">
+      <div class="form-group">
+        <div class="form-label">🔧 Máquina / Equipamento *</div>
+        <div class="maq-picker" id="maqPicker">
+          <!-- abas de modo -->
+          <div class="maq-mode-row">
+            <button type="button" class="maq-mode-btn active" id="maqBtnSearch">🔍 Busca Manual</button>
+            <button type="button" class="maq-mode-btn" id="maqBtnNFC">📡 NFC</button>
+          </div>
+          <!-- painel busca -->
+          <div class="maq-search-panel" id="maqSearchPanel">
+            <div class="maq-search-wrap">
+              <input type="text" class="maq-search-input" id="maqSearchInput" placeholder="Digite nome ou nº da máquina...">
+              <button type="button" class="maq-search-clear" id="maqSearchClear" style="display:none">✕</button>
+            </div>
+            <div class="maq-results" id="maqResults"></div>
+          </div>
+          <!-- painel NFC -->
+          <div class="maq-nfc-panel" id="maqNFCPanel" style="display:none">
+            <div class="maq-nfc-icon">📡</div>
+            <div class="maq-nfc-status" id="maqNFCStatus">Aproxime a tag NFC da máquina</div>
+            <button type="button" class="maq-nfc-scan-btn" id="btnNFC">▶ Iniciar Scan</button>
+          </div>
+          <!-- barra selecionado -->
+          <div class="maq-selected-bar" id="maqSelectedBar" style="display:none">
+            <span>✅</span>
+            <span class="maq-selected-name" id="maqSelectedName">—</span>
+            <button type="button" class="maq-selected-x" id="maqSelectedX" title="Remover">✕</button>
+          </div>
+          <input type="hidden" id="regMaquina" value="">
+        </div>
+      </div>
+      <div class="form-group">
+        <div class="form-label">🔴 Tipo de Quebra *</div>
+        <select class="form-select" id="regTipo"><option value="">— Selecione o tipo —</option></select>
+      </div>
+    </div>
+
+    <div class="form-grid" style="margin-bottom:18px">
+      <div class="form-group">
+        <div class="form-label">🚗 Veículos perdidos (sem aperto)</div>
+        <input type="number" class="form-input" id="regVeiculos" min="0" max="999" value="0">
+      </div>
+      <div class="form-group">
+        <div class="form-label">⏱ Tempo parado (minutos)</div>
+        <input type="number" class="form-input" id="regTempo" min="0" max="9999" placeholder="Ex: 25">
+      </div>
+    </div>
+
+    <div class="form-group" style="margin-bottom:20px">
+      <div class="form-label">📝 Observação / Descrição</div>
+      <textarea class="form-textarea" id="regObs" placeholder="Descreva o problema, ação tomada, quem acionou manutenção..."></textarea>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="btnSaveRecord">✅ Registrar</button>
+      <button class="btn btn-ghost" id="btnClearForm">↺ Limpar</button>
+    </div>
+  </div>
+
+  <div id="lastRecordCard" style="display:none">
+    <div class="section-title" style="margin-top:8px">Último registro salvo</div>
+    <div class="card" style="margin-bottom:10px" id="lastRecordContent"></div>
+    <div class="btn-row" style="margin-bottom:24px">
+      <button class="btn btn-print btn-sm" id="btnPrintLast">🖨 Imprimir Registro</button>
+      <button class="btn btn-wa btn-sm" id="btnWaLast">📲 Enviar WhatsApp</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ DASHBOARD ══════════ -->
+<div class="view" id="view-dashboard">
+  <div class="action-bar">
+    <button class="btn btn-success btn-sm" id="btnRefresh">🔄 Atualizar</button>
+    <button class="btn btn-print btn-sm" id="btnPrintDash">🖨 Imprimir Dashboard</button>
+    <button class="btn btn-wa btn-sm" id="btnWaDash">📲 Enviar WhatsApp</button>
+    <button class="btn btn-ghost btn-sm" id="btnBackupDash">⬇ Backup JSON</button>
+  </div>
+  <div class="section-title" style="margin-top:0;margin-bottom:14px;font-family:'Syne',sans-serif;letter-spacing:.3px">⚡ Equipamentos Críticos</div>
+  <div class="kpi-grid" id="criticalKPIs"></div>
+  <div class="metrics" id="dashMetrics"></div>
+  <div class="section-title">Ranking · Máquinas com mais quebras</div>
+  <div class="ranking-list" id="rankingList"></div>
+  <div class="section-title">Últimas 7 ocorrências</div>
+  <div id="recentList"></div>
+</div>
+
+<!-- ══════════ HISTÓRICO ══════════ -->
+<div class="view" id="view-history">
+  <div class="filter-bar">
+    <select class="form-select" id="filtMaquina"><option value="">Todas as máquinas</option></select>
+    <select class="form-select" id="filtTipo"><option value="">Todos os tipos</option></select>
+    <input type="date" class="form-input" id="filtDate" style="max-width:160px">
+    <button class="btn btn-ghost btn-sm" id="btnClearFilters">✕ Limpar</button>
+  </div>
+  <div class="action-bar">
+    <button class="btn btn-print btn-sm" id="btnPrintHist">🖨 Imprimir Histórico</button>
+    <button class="btn btn-wa btn-sm" id="btnWaHist">📲 Enviar WhatsApp</button>
+    <button class="btn btn-ghost btn-sm" id="btnCsvHist">⬇ Exportar CSV</button>
+    <button class="btn btn-ghost btn-sm" id="btnBackupHist">⬇ Backup JSON</button>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Data/Hora</th><th>Turno</th><th>Equipamento</th><th>Lado</th><th>Máquina</th><th>Tipo de Quebra</th><th>Veíc.</th><th>Tempo</th><th>Obs.</th><th>Ações</th></tr></thead>
+      <tbody id="historyBody"></tbody>
+    </table>
+    <div id="historyEmpty" class="empty" style="display:none"><div class="empty-icon">🔍</div>Nenhum registro encontrado.</div>
+  </div>
+</div>
+
+<!-- ══════════ CONFIGURAÇÕES ══════════ -->
+<div class="view" id="view-config">
+
+  <!-- SETOR / MONITOR / LÍDER -->
+  <div class="card">
+    <div class="section-title">👤 Identificação do Setor</div>
+    <div class="form-grid" style="margin-bottom:14px">
+      <div class="form-group">
+        <div class="form-label">Setor</div>
+        <input class="form-input" id="cfgSetor" placeholder="Ex: Fahrwerk">
+      </div>
+      <div class="form-group">
+        <div class="form-label">Nome do Monitor</div>
+        <input class="form-input" id="cfgMonitor" placeholder="Seu nome completo">
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:16px;max-width:320px">
+      <div class="form-label">Nome do Líder</div>
+      <input class="form-input" id="cfgLider" placeholder="Nome do líder responsável">
+    </div>
+    <button class="btn btn-primary btn-sm" id="btnSaveInfo">💾 Salvar Identificação</button>
+  </div>
+
+  <div class="cfg-grid">
+    <!-- TIPOS DE EQUIPAMENTO -->
+    <div>
+      <div class="card">
+        <div class="section-title">🔩 Tipos de Equipamento</div>
+        <div class="equip-manage-list" id="equipManageList"></div>
+        <div style="display:flex;gap:8px;margin-top:4px">
+          <input class="form-input" id="cfgEquipName" placeholder="Nome do equipamento" style="flex:1">
+          <button class="btn btn-primary btn-sm" id="btnAddEquip">+ Adicionar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MÁQUINAS -->
+    <div>
+      <div class="card">
+        <div class="section-title">Cadastrar Máquina</div>
+        <div class="form-group" style="margin-bottom:10px">
+          <div class="form-label">Nome / Identificação</div>
+          <input class="form-input" id="cfgMaqName" placeholder="Ex: Talha T-01">
+        </div>
+        <div class="form-group" style="margin-bottom:10px">
+          <div class="form-label">Operação / Posto</div>
+          <input class="form-input" id="cfgMaqOp" placeholder="Ex: OP-230 Fixação diferencial">
+        </div>
+        <div class="form-group" style="margin-bottom:14px">
+          <div class="form-label">Categoria</div>
+          <select class="form-select" id="cfgMaqCat">
+            <option value="Apertadeira Eletrônica">Apertadeira Eletrônica</option>
+            <option value="Máquina a Bateria">Máquina a Bateria</option>
+            <option value="IHM">IHM</option>
+            <option value="Talha">Talha</option>
+            <option value="__custom__">+ Registrar máquina...</option>
+          </select>
+          <input class="form-input" id="cfgMaqCatCustom" placeholder="Digite o tipo de categoria" style="display:none;margin-top:8px">
+        </div>
+        <button class="btn btn-primary btn-sm" id="btnAddMaq">+ Adicionar Máquina</button>
+      </div>
+      <div class="section-title">Máquinas cadastradas</div>
+      <div class="config-list" id="maqList"></div>
+    </div>
+  </div>
+
+  <!-- TIPOS DE QUEBRA -->
+  <div class="divider"></div>
+  <div class="cfg-grid">
+    <div>
+      <div class="card">
+        <div class="section-title">Cadastrar Tipo de Quebra</div>
+        <div class="form-group" style="margin-bottom:10px">
+          <div class="form-label">Descrição do tipo</div>
+          <input class="form-input" id="cfgTipoName" placeholder="Ex: Sem torque / Falha elétrica">
+        </div>
+        <div class="form-group" style="margin-bottom:14px">
+          <div class="form-label">Criticidade</div>
+          <select class="form-select" id="cfgTipoCrit">
+            <option value="Alta">🔴 Alta — para linha</option>
+            <option value="Média">🟡 Média — reduz ciclo</option>
+            <option value="Baixa">🟢 Baixa — opera com restrição</option>
+          </select>
+        </div>
+        <button class="btn btn-primary btn-sm" id="btnAddTipo">+ Adicionar Tipo</button>
+      </div>
+    </div>
+    <div>
+      <div class="section-title" style="margin-top:0">Tipos cadastrados</div>
+      <div class="config-list" id="tipoList"></div>
+    </div>
+  </div>
+
+  <!-- BACKUP -->
+  <div class="divider"></div>
+  <div class="section-title">Backup e Exportação</div>
+  <div class="btn-row">
+    <button class="btn btn-ghost btn-sm" id="btnExportJson">⬇ Backup JSON</button>
+    <button class="btn btn-ghost btn-sm" id="btnExportCsv">⬇ Exportar CSV</button>
+    <button class="btn btn-ghost btn-sm" id="btnImportJson">⬆ Importar Backup</button>
+    <button class="btn btn-danger btn-sm" id="btnReset">🗑 Limpar todos os dados</button>
+  </div>
+  <input type="file" id="importFile" accept=".json" style="display:none">
+  <input type="file" id="updateFile" accept=".html" style="display:none">
+  <div style="margin-top:18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+    <div style="font-size:11px;color:var(--text3)">Versão <strong id="currentVersionLabel">4.0</strong> · Fahrwerk Mapeamento de Quebras · Dados salvos localmente</div>
+    <button class="btn btn-ghost btn-sm" id="btnCheckUpdate">🔄 Atualizar App</button>
+  </div>
+</div>
+
+<!-- MODAL EDITAR REGISTRO -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <div class="modal-title">
+      ✏️ Editar Registro
+      <button class="modal-close" id="btnCloseModal">✕</button>
+    </div>
+    <div class="form-grid" style="margin-bottom:14px">
+      <div class="form-group">
+        <div class="form-label">Data / Hora</div>
+        <input type="datetime-local" class="form-input" id="editTs">
+      </div>
+      <div class="form-group">
+        <div class="form-label">Turno</div>
+        <select class="form-select" id="editTurno">
+          <option value="1º Turno">1º Turno</option>
+          <option value="2º Turno">2º Turno</option>
+          <option value="3º Turno">3º Turno</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-grid" style="margin-bottom:14px">
+      <div class="form-group">
+        <div class="form-label">Tipo de Equipamento</div>
+        <select class="form-select" id="editEquip"></select>
+      </div>
+      <div class="form-group">
+        <div class="form-label">Lado</div>
+        <select class="form-select" id="editLado">
+          <option value="Lado Esquerdo">Lado Esquerdo</option>
+          <option value="Lado Direito">Lado Direito</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-grid" style="margin-bottom:14px">
+      <div class="form-group">
+        <div class="form-label">Máquina / Equipamento</div>
+        <select class="form-select" id="editMaquina"></select>
+      </div>
+      <div class="form-group">
+        <div class="form-label">Tipo de Quebra</div>
+        <select class="form-select" id="editTipo"></select>
+      </div>
+    </div>
+    <div class="form-grid" style="margin-bottom:14px">
+      <div class="form-group">
+        <div class="form-label">Veículos perdidos</div>
+        <input type="number" class="form-input" id="editVeiculos" min="0">
+      </div>
+      <div class="form-group">
+        <div class="form-label">Tempo parado (min)</div>
+        <input type="number" class="form-input" id="editTempo" min="0">
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:20px">
+      <div class="form-label">Observação</div>
+      <textarea class="form-textarea" id="editObs"></textarea>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="btnSaveEdit">💾 Salvar Alterações</button>
+      <button class="btn btn-ghost" id="btnCancelEdit">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL GERENCIAR EQUIPAMENTOS -->
+<div class="modal-overlay" id="equipModal">
+  <div class="modal" style="max-width:min(420px,calc(100vw - 24px))">
+    <div class="modal-title">
+      🔩 Tipos de Equipamento
+      <button class="modal-close" id="btnCloseEquipModal">✕</button>
+    </div>
+    <div class="equip-manage-list" id="equipModalList"></div>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <input class="form-input" id="modalEquipName" placeholder="Novo tipo de equipamento" style="flex:1">
+      <button class="btn btn-primary btn-sm" id="btnModalAddEquip">+ Adicionar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL BACKUP -->
+<div class="modal-overlay" id="backupModal">
+  <div class="modal" style="max-width:min(440px,calc(100vw - 24px))">
+    <div class="modal-title">
+      💾 Backup — Mapeamento de Quebras
+      <button class="modal-close" id="btnCloseBackup">✕</button>
+    </div>
+
+    <!-- ARMAZENAMENTO -->
+    <div class="backup-section">
+      <div class="backup-section-title">📦 Armazenamento Local</div>
+      <div class="storage-info">
+        <span>localStorage utilizado</span>
+        <span id="storageSize">calculando...</span>
+      </div>
+      <div class="storage-bar-wrap"><div class="storage-bar-fill" id="storageBar" style="width:0%"></div></div>
+      <div id="storageDetail" style="font-size:11px;color:var(--text3);margin-top:4px"></div>
+      <div id="storageWarning" style="display:none;margin-top:8px;background:var(--amber-light);border:1px solid #fde68a;border-radius:8px;padding:8px 12px;font-size:12px;color:#92400e">
+        ⚠ Nenhum backup externo realizado. Recomendamos salvar um arquivo agora.
+      </div>
+    </div>
+
+    <!-- EXPORTAR -->
+    <div class="backup-section">
+      <div class="backup-section-title">⬇ Exportar</div>
+      <div class="backup-btn-row">
+        <button class="btn-dark" id="btnBackupJson">⬇ Arquivo .json <span style="margin-left:auto;font-size:11px;opacity:.6">todos os dados</span></button>
+        <button class="btn-dark" id="btnBackupCsvModal">⬇ Arquivo .csv <span style="margin-left:auto;font-size:11px;opacity:.6">abre no Excel</span></button>
+      </div>
+    </div>
+
+    <!-- RESTAURAR -->
+    <div class="backup-section" style="margin-bottom:0">
+      <div class="backup-section-title">⬆ Restaurar</div>
+      <div class="backup-btn-row">
+        <button class="btn-outline-restore" id="btnRestoreJson">📁 Restaurar de arquivo .json</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ATUALIZAÇÃO -->
+<div class="modal-overlay" id="updateModal">
+  <div class="modal" style="max-width:min(400px,calc(100vw - 24px))">
+    <div class="modal-title">
+      🔄 Atualização do App
+      <button class="modal-close" id="btnCloseUpdateModal">✕</button>
+    </div>
+    <div class="update-version-row">
+      <div class="update-ver-box">
+        <div class="update-ver-label">Versão atual</div>
+        <div class="update-ver-value" id="updateCurVer">4.0</div>
+      </div>
+      <div class="update-arrow">→</div>
+      <div class="update-ver-box">
+        <div class="update-ver-label">Nova versão</div>
+        <div class="update-ver-value new" id="updateNewVer">—</div>
+      </div>
+    </div>
+    <div class="update-note" id="updateNote">
+      Todos os seus dados (registros, máquinas, configurações) serão mantidos após a atualização.
+    </div>
+    <button class="btn-update-apply" id="btnApplyUpdate">✅ Aplicar Atualização</button>
+    <button class="btn-update-cancel" id="btnCancelUpdate">Cancelar</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═══════════════════ VERSÃO ═══════════════════ */
+const APP_VERSION = '4.0';
+document.getElementById('currentVersionLabel').textContent = APP_VERSION;
+document.getElementById('updateCurVer').textContent = APP_VERSION;
+
+/* ═══════════════════ ATUALIZAÇÃO ═══════════════════ */
+let _pendingUpdateContent = '';
+
+function openUpdatePicker(){
+  document.getElementById('updateFile').click();
+}
+
+document.getElementById('updateFile').addEventListener('change', function(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  if(!file.name.endsWith('.html')){showToast('⚠ Selecione um arquivo .html',true);return;}
+  const reader = new FileReader();
+  reader.onload = function(ev){
+    const content = ev.target.result;
+    // Extrair versão do novo arquivo — busca padrão "APP_VERSION = 'X.Y'" ou "Versão X.Y"
+    let newVer = '?';
+    const m1 = content.match(/APP_VERSION\s*=\s*['"]([^'"]+)['"]/);
+    const m2 = content.match(/Versão\s+([\d.]+)/);
+    if(m1) newVer = m1[1];
+    else if(m2) newVer = m2[1];
+    _pendingUpdateContent = content;
+    document.getElementById('updateNewVer').textContent = newVer;
+    document.getElementById('updateCurVer').textContent = APP_VERSION;
+    // Mensagem de aviso se mesma versão
+    const note = document.getElementById('updateNote');
+    if(newVer === APP_VERSION){
+      note.textContent = '⚠ O arquivo selecionado tem a mesma versão (' + newVer + '). Você pode aplicar mesmo assim para reinstalar.';
+    } else {
+      note.textContent = 'Todos os seus dados (registros, máquinas, configurações) serão mantidos após a atualização.';
+    }
+    document.getElementById('updateModal').classList.add('open');
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+
+function applyUpdate(){
+  if(!_pendingUpdateContent){showToast('⚠ Nenhuma atualização pendente.',true);return;}
+  // Fecha o modal antes de aplicar
+  document.getElementById('updateModal').classList.remove('open');
+  showToast('⏳ Aplicando atualização...');
+  // Pequeno delay para o toast aparecer antes do reload
+  setTimeout(()=>{
+    document.open();
+    document.write(_pendingUpdateContent);
+    document.close();
+  }, 600);
+}
+
+document.getElementById('btnHeaderUpdate').addEventListener('click', openUpdatePicker);
+document.getElementById('btnCheckUpdate').addEventListener('click', openUpdatePicker);
+document.getElementById('btnApplyUpdate').addEventListener('click', applyUpdate);
+document.getElementById('btnCancelUpdate').addEventListener('click', ()=>{
+  document.getElementById('updateModal').classList.remove('open');
+  _pendingUpdateContent = '';
+});
+document.getElementById('btnCloseUpdateModal').addEventListener('click', ()=>{
+  document.getElementById('updateModal').classList.remove('open');
+  _pendingUpdateContent = '';
+});
+document.getElementById('updateModal').addEventListener('click', function(e){
+  if(e.target===this){this.classList.remove('open'); _pendingUpdateContent='';}
+});
+
+/* ═══════════════════ DADOS ═══════════════════ */
+const KEYS={r:'qm_records',m:'qm_maquinas',t:'qm_tipos',e:'qm_equips',i:'qm_info'};
+let records  = JSON.parse(localStorage.getItem(KEYS.r)||'[]');
+let maquinas = JSON.parse(localStorage.getItem(KEYS.m)||'[]');
+let tipos    = JSON.parse(localStorage.getItem(KEYS.t)||'[]');
+let equipTypes = JSON.parse(localStorage.getItem(KEYS.e)||'["Apertadeira Eletrônica","Manipulador","IHM"]');
+let info     = JSON.parse(localStorage.getItem(KEYS.i)||'{"setor":"Fahrwerk","monitor":"","lider":""}');
+let editingId = null;
+let lastRecordId = null;
+
+function sv(k,d){localStorage.setItem(k,JSON.stringify(d));}
+
+if(!maquinas.length){
+  maquinas=[
+    {id:'m1',name:'Talha T-01',op:'OP-210 Suspensão dianteira',cat:'Talha'},
+    {id:'m2',name:'Talha T-02',op:'OP-220 Suspensão traseira',cat:'Talha'},
+    {id:'m3',name:'Talha T-03',op:'OP-230 Diferencial',cat:'Talha'},
+    {id:'m4',name:'Apertadeira A-01',op:'OP-210 Fixação pivô',cat:'Apertadeira Eletrônica'},
+    {id:'m5',name:'Apertadeira A-02',op:'OP-220 Fixação mola',cat:'Apertadeira Eletrônica'},
+    {id:'m6',name:'Apertadeira A-03',op:'OP-230 Porca eixo',cat:'Apertadeira Eletrônica'},
+  ];sv(KEYS.m,maquinas);
+}
+if(!tipos.length){
+  tipos=[
+    {id:'t1',name:'Sem torque / não aperta',crit:'Alta'},
+    {id:'t2',name:'Falha elétrica / não liga',crit:'Alta'},
+    {id:'t3',name:'Cabo / mangueira rompida',crit:'Média'},
+    {id:'t4',name:'Limite / sensor com defeito',crit:'Média'},
+    {id:'t5',name:'Desgaste de ponteira',crit:'Baixa'},
+    {id:'t6',name:'Fuga de ar comprimido',crit:'Baixa'},
+  ];sv(KEYS.t,tipos);
+}
+
+/* ═══════════════════ RELÓGIO ═══════════════════ */
+const zp=n=>String(n).padStart(2,'0');
+function fmtD(dt){return `${zp(dt.getDate())}/${zp(dt.getMonth()+1)}/${dt.getFullYear()}`;}
+function fmtT(dt){return `${zp(dt.getHours())}:${zp(dt.getMinutes())}`;}
+function fmtDT(dt){return `${fmtD(dt)}  ${zp(dt.getHours())}:${zp(dt.getMinutes())}:${zp(dt.getSeconds())}`;}
+function updateClock(){
+  const n=new Date();
+  document.getElementById('liveTime').textContent=`${zp(n.getHours())}:${zp(n.getMinutes())}:${zp(n.getSeconds())}`;
+  document.getElementById('liveDate').textContent=fmtD(n);
+  document.getElementById('regDatetime').textContent=fmtDT(n);
+}
+setInterval(updateClock,1000); updateClock();
+document.getElementById('btnHeaderBackup').addEventListener('click', openBackupModal);
+
+/* ═══════════════════ INFO HEADER ═══════════════════ */
+function updateHeaderInfo(){
+  const el=document.getElementById('headerInfo');
+  const setor=info.setor||'Fahrwerk';
+  const monitor=info.monitor?info.monitor:'Configure em ⚙️';
+  const lider=info.lider||'—';
+  el.innerHTML='<strong>'+setor+'</strong><span>'+monitor+(info.lider?' · '+lider:'')+'</span>';
+}
+updateHeaderInfo();
+
+/* ═══════════════════ TABS ═══════════════════ */
+function switchTab(name,btn){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  btn.classList.add('active');
+  if(name==='dashboard')renderDashboard();
+  if(name==='history'){populateFilterSelects();renderHistory();}
+  if(name==='config')renderConfig();
+}
+
+/* ═══════════════════ EQUIP TOGGLE ═══════════════════ */
+function renderEquipToggle(){
+  const wrap=document.getElementById('equipToggle');
+  wrap.innerHTML='';
+  equipTypes.forEach((e,i)=>{
+    const btn=document.createElement('button');
+    btn.type='button'; btn.className='equip-btn'; btn.textContent=e;
+    btn.dataset.val=e;
+    btn.addEventListener('click',()=>setEquip(e));
+    wrap.appendChild(btn);
+  });
+  // Selecionar o primeiro por padrão
+  const cur=document.getElementById('regEquip').value;
+  const target=equipTypes.includes(cur)?cur:(equipTypes[0]||'');
+  setEquip(target);
+}
+
+function setEquip(val){
+  document.getElementById('regEquip').value=val;
+  document.querySelectorAll('#equipToggle .equip-btn').forEach(b=>{
+    b.classList.toggle('active',b.dataset.val===val);
+  });
+}
+
+function setLado(val){
+  document.getElementById('regLado').value=val;
+  document.getElementById('ladoBtnD').classList.toggle('active',val==='Lado Direito');
+  document.getElementById('ladoBtnE').classList.toggle('active',val==='Lado Esquerdo');
+  document.getElementById('ladoBtnS').classList.toggle('active',val==='Skillit');
+}
+
+function setLadoNum(n){
+  const cur=document.getElementById('regLadoNum').value;
+  // clique no mesmo número desmarca
+  const novo = (cur===String(n)) ? '' : String(n);
+  document.getElementById('regLadoNum').value=novo;
+  document.querySelectorAll('#numToggle .num-btn').forEach(b=>{
+    b.classList.toggle('active', b.dataset.n===novo);
+  });
+}
+
+function getLadoFull(){
+  const lado=document.getElementById('regLado').value;
+  const num=document.getElementById('regLadoNum').value;
+  return num ? `${lado} · ${num}` : lado;
+}
+
+function renderNumToggle(){
+  const wrap=document.getElementById('numToggle');
+  wrap.innerHTML='';
+  for(let i=1;i<=22;i++){
+    const b=document.createElement('button');
+    b.type='button'; b.className='num-btn'; b.textContent=i; b.dataset.n=String(i);
+    b.addEventListener('click',()=>setLadoNum(i));
+    wrap.appendChild(b);
+  }
+}
+renderNumToggle();
+
+/* ═══════════════════ SELECTS ═══════════════════ */
+function populateSelects(){
+  renderMaqResults(document.getElementById('maqSearchInput')?.value||'');
+  const te=document.getElementById('regTipo'),cv2=te.value;
+  te.innerHTML='<option value="">— Selecione o tipo —</option>';
+  tipos.forEach(t=>{const o=document.createElement('option');o.value=t.id;const i=t.crit==='Alta'?'🔴':t.crit==='Média'?'🟡':'🟢';o.textContent=`${i} ${t.name}`;te.appendChild(o);});
+  if(cv2)te.value=cv2;
+}
+
+function populateFilterSelects(){
+  const fm=document.getElementById('filtMaquina');
+  if(fm){fm.innerHTML='<option value="">Todas as máquinas</option>';maquinas.forEach(m=>{fm.innerHTML+=`<option value="${m.id}">${m.name}</option>`;});}
+  const ft=document.getElementById('filtTipo');
+  if(ft){ft.innerHTML='<option value="">Todos os tipos</option>';tipos.forEach(t=>{ft.innerHTML+=`<option value="${t.id}">${t.name}</option>`;});}
+}
+
+function populateEditSelects(){
+  const em=document.getElementById('editMaquina');
+  em.innerHTML='';maquinas.forEach(m=>{em.innerHTML+=`<option value="${m.id}">${m.name} · ${m.op}</option>`;});
+  const et=document.getElementById('editTipo');
+  et.innerHTML='';tipos.forEach(t=>{const i=t.crit==='Alta'?'🔴':t.crit==='Média'?'🟡':'🟢';et.innerHTML+=`<option value="${t.id}">${i} ${t.name}</option>`;});
+  const ee=document.getElementById('editEquip');
+  ee.innerHTML='';equipTypes.forEach(e=>{ee.innerHTML+=`<option value="${e}">${e}</option>`;});
+}
+
+/* INIT */
+renderEquipToggle();
+populateSelects();
+
+/* ═══════════════════ REGISTRAR ═══════════════════ */
+document.getElementById('btnSaveRecord').addEventListener('click',saveRecord);
+document.getElementById('btnClearForm').addEventListener('click',clearForm);
+document.getElementById('ladoBtnD').addEventListener('click',()=>setLado('Lado Direito'));
+document.getElementById('ladoBtnE').addEventListener('click',()=>setLado('Lado Esquerdo'));
+document.getElementById('ladoBtnS').addEventListener('click',()=>setLado('Skillit'));
+
+function saveRecord(){
+  const maqId=document.getElementById('regMaquina').value;
+  const tipoId=document.getElementById('regTipo').value;
+  const banner=document.getElementById('alertBanner');
+  if(!maqId||!tipoId){banner.classList.add('visible');setTimeout(()=>banner.classList.remove('visible'),3000);return;}
+  banner.classList.remove('visible');
+  const now=new Date();
+  const rec={
+    id:'r_'+Date.now(),ts:now.toISOString(),
+    turno:document.getElementById('regTurno').value,
+    equip:document.getElementById('regEquip').value,
+    lado:getLadoFull(),
+    maqId,tipoId,
+    veiculos:parseInt(document.getElementById('regVeiculos').value)||0,
+    tempo:parseInt(document.getElementById('regTempo').value)||0,
+    obs:document.getElementById('regObs').value.trim()
+  };
+  records.unshift(rec);sv(KEYS.r,records);
+  lastRecordId=rec.id;
+  renderLastRecord(rec);
+  clearForm();
+  showToast('✅ Quebra registrada com sucesso!');
+}
+
+function renderLastRecord(r){
+  const m=maquinas.find(x=>x.id===r.maqId)||{name:r.maqId,op:'',cat:''};
+  const t=tipos.find(x=>x.id===r.tipoId)||{name:r.tipoId,crit:''};
+  const dt=new Date(r.ts);
+  const cc={Alta:'var(--red)',Média:'var(--amber)',Baixa:'var(--green)'}[t.crit]||'var(--text)';
+  document.getElementById('lastRecordContent').innerHTML=`
+    <div class="last-grid">
+      <div class="last-field"><div class="last-label">Data / Hora</div><div class="last-value" style="color:var(--blue-dark)">${fmtD(dt)} ${fmtT(dt)}</div><div class="last-sub">${r.turno}</div></div>
+      <div class="last-field"><div class="last-label">Equipamento</div><div class="last-value" style="font-size:14px">${r.equip||'—'}</div><div class="last-sub">${r.lado||'—'}</div></div>
+      <div class="last-field"><div class="last-label">Máquina</div><div class="last-value" style="font-size:14px">${m.name}</div><div class="last-sub">${m.op}</div></div>
+      <div class="last-field"><div class="last-label">Tipo de Quebra</div><div class="last-value" style="font-size:13px;color:${cc}">${t.name}</div><div class="last-sub">Criticidade: ${t.crit}</div></div>
+      <div class="last-field"><div class="last-label">Veículos Perdidos</div><div class="last-value" style="font-size:30px;color:${r.veiculos>0?'var(--red)':'var(--green)'}">${r.veiculos}</div></div>
+      <div class="last-field"><div class="last-label">Tempo Parado</div><div class="last-value" style="font-size:28px;color:var(--amber)">${r.tempo||0}<span style="font-size:13px;font-weight:400"> min</span></div></div>
+    </div>
+    ${r.obs?`<div style="background:var(--surface2);border-radius:var(--radius);padding:10px 14px;border:1px solid var(--border);font-size:12px;color:var(--text2)"><span style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--text3);font-weight:600">Obs: </span>${r.obs}</div>`:''}
+  `;
+  document.getElementById('lastRecordCard').style.display='block';
+  document.getElementById('btnPrintLast').onclick=()=>printRecord(lastRecordId);
+  document.getElementById('btnWaLast').onclick=()=>sendWhatsApp(lastRecordId);
+}
+
+function clearForm(){
+  clearMaqPicker();
+  document.getElementById('regTipo').value='';
+  document.getElementById('regVeiculos').value='0';
+  document.getElementById('regTempo').value='';
+  document.getElementById('regObs').value='';
+  document.getElementById('regLadoNum').value='';
+  document.querySelectorAll('#numToggle .num-btn').forEach(b=>b.classList.remove('active'));
+  setLado('Lado Direito');
+  renderEquipToggle();
+}
+
+/* ═══════════════════ DASHBOARD ═══════════════════ */
+document.getElementById('btnRefresh').addEventListener('click',renderDashboard);
+document.getElementById('btnPrintDash').addEventListener('click',printDashboard);
+document.getElementById('btnWaDash').addEventListener('click',sendDashboardWhatsApp);
+document.getElementById('btnBackupDash').addEventListener('click',exportJSON);
+
+/* ── KPIs CRÍTICOS ── */
+const KPI_EQUIPS = [
+  {key:'Apertadeira Eletrônica', label:'Apertadeira Elétrica', icon:'🔩'},
+  {key:'Manipulador',             label:'Manipulador',          icon:'🦾'},
+  {key:'IHM',                     label:'IHM',                  icon:'🖥️'},
+  {key:'Skillit',                 label:'Skillit',              icon:'⚙️'}
+];
+const KPI_STATUS = {
+  estavel: {label:'ESTÁVEL',        color:'#00c853', glow:'0 0 18px rgba(0,200,83,.32)',  border:'rgba(0,200,83,.5)',  bg:'rgba(0,200,83,.06)'},
+  normal:  {label:'NORMAL',         color:'#0040c1', glow:'0 0 18px rgba(0,64,193,.28)',  border:'rgba(0,64,193,.45)', bg:'rgba(0,64,193,.05)'},
+  atencao: {label:'ATENÇÃO',        color:'#e6ac00', glow:'0 0 20px rgba(230,172,0,.4)',  border:'rgba(255,214,0,.7)', bg:'rgba(255,214,0,.07)'},
+  critico: {label:'CRÍTICO',        color:'#d50000', glow:'0 0 24px rgba(213,0,0,.45)',   border:'rgba(213,0,0,.6)',   bg:'rgba(213,0,0,.07)'}
+};
+
+function renderCriticalKPIs(){
+  const now = Date.now();
+  const WEEK = 7*24*60*60*1000;
+  const stats = KPI_EQUIPS.map(eq=>{
+    const recs = records.filter(r=>r.equip===eq.key);
+    const total = recs.length;
+    // Máquina com mais falhas
+    const mc={};recs.forEach(r=>{mc[r.maqId]=(mc[r.maqId]||0)+1;});
+    const topEntry = Object.entries(mc).sort((a,b)=>b[1]-a[1])[0];
+    const topMaq = topEntry ? (maquinas.find(m=>m.id===topEntry[0])||{name:topEntry[0]}) : null;
+    const topCount = topEntry ? topEntry[1] : 0;
+    // Tendência 7d
+    const last7 = recs.filter(r=>(now-new Date(r.ts).getTime())<WEEK).length;
+    const prev7 = recs.filter(r=>{const a=now-new Date(r.ts).getTime();return a>=WEEK&&a<2*WEEK;}).length;
+    const trend = last7>prev7?'▲':last7<prev7?'▼':'→';
+    const trendColor = last7>prev7?'#d50000':last7<prev7?'#00c853':'#e6ac00';
+    // Veículos perdidos
+    const veiculos = recs.reduce((s,r)=>s+(r.veiculos||0),0);
+    // Status
+    let status = total>=10?'critico':total>=5?'atencao':total>=1?'normal':'estavel';
+    return {...eq,total,topMaq,topCount,last7,trend,trendColor,veiculos,status};
+  });
+  const maxTotal = Math.max(...stats.map(s=>s.total),1);
+
+  document.getElementById('criticalKPIs').innerHTML = stats.map((s,i)=>{
+    const sc = KPI_STATUS[s.status];
+    const pct = Math.round((s.total/maxTotal)*100);
+    const isPulse = s.status==='critico';
+    const machineLine = s.topMaq ? s.topMaq.name+(s.topCount>1?` · ${s.topCount}×`:'') : 'Sem ocorrências';
+    const miniLabel = s.total===0?'ESTÁVEL':s.total>=10?'ALTA RECORRÊNCIA':s.total>=5?'ATENÇÃO':'ESTÁVEL';
+    return `<div class="kpi-card ${isPulse?'kpi-pulse':''}" style="
+      --kpi-color:${sc.color};--kpi-glow:${sc.glow};--kpi-border:${sc.border};--kpi-bg:${sc.bg};
+      animation-delay:${i*0.08}s">
+      <div class="kpi-top-row">
+        <div class="kpi-icon-wrap">${s.icon}</div>
+        <div class="kpi-status-badge" style="color:${sc.color};background:${sc.bg};border-color:${sc.border}">${miniLabel}</div>
+      </div>
+      <div class="kpi-main-value">${s.total}</div>
+      <div class="kpi-equip-name">${s.label}</div>
+      <div class="kpi-machine-name">${machineLine}</div>
+      <div class="kpi-bar-track"><div class="kpi-bar-fill" style="width:${pct}%;background:${sc.color}"></div></div>
+      <div class="kpi-footer-row">
+        <span class="kpi-count-text">${s.total} ${s.total===1?'falha':'falhas'} · ${s.veiculos} veíc.</span>
+        <span class="kpi-trend" style="color:${s.trendColor}">${s.trend} ${s.last7} (7d)</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ═══════════════════ MACHINE PICKER ═══════════════════ */
+function renderMaqResults(q){
+  const res = document.getElementById('maqResults');
+  const cur = document.getElementById('regMaquina').value;
+  const term = q.toLowerCase().trim();
+  const list = term
+    ? maquinas.filter(m=>m.name.toLowerCase().includes(term)||m.op.toLowerCase().includes(term))
+    : maquinas;
+  if(!list.length){
+    res.classList.remove('open');
+    res.innerHTML='';
+    return;
+  }
+  res.innerHTML = list.map(m=>`
+    <div class="maq-result-item ${m.id===cur?'sel':''}" data-id="${m.id}">
+      <span class="maq-result-name">${m.name}</span>
+      <span class="maq-result-sub">${m.op}</span>
+    </div>`).join('');
+  res.classList.add('open');
+  res.querySelectorAll('.maq-result-item').forEach(el=>{
+    el.addEventListener('click',()=>selectMachine(el.dataset.id));
+  });
+}
+
+function selectMachine(id){
+  document.getElementById('regMaquina').value = id;
+  const m = maquinas.find(x=>x.id===id);
+  if(!m) return;
+  document.getElementById('maqSelectedName').textContent = m.name+(m.op?` · ${m.op}`:'');
+  document.getElementById('maqSelectedBar').style.display='flex';
+  document.getElementById('maqResults').classList.remove('open');
+  document.getElementById('maqSearchInput').value='';
+  document.getElementById('maqSearchClear').style.display='none';
+}
+
+function clearMaqPicker(){
+  document.getElementById('regMaquina').value='';
+  document.getElementById('maqSelectedBar').style.display='none';
+  document.getElementById('maqSearchInput').value='';
+  document.getElementById('maqSearchClear').style.display='none';
+  document.getElementById('maqResults').classList.remove('open');
+  document.getElementById('maqResults').innerHTML='';
+}
+
+// Abas modo
+document.getElementById('maqBtnSearch').addEventListener('click',()=>{
+  document.getElementById('maqBtnSearch').classList.add('active');
+  document.getElementById('maqBtnNFC').classList.remove('active');
+  document.getElementById('maqSearchPanel').style.display='';
+  document.getElementById('maqNFCPanel').style.display='none';
+});
+document.getElementById('maqBtnNFC').addEventListener('click',()=>{
+  document.getElementById('maqBtnNFC').classList.add('active');
+  document.getElementById('maqBtnSearch').classList.remove('active');
+  document.getElementById('maqNFCPanel').style.display='';
+  document.getElementById('maqSearchPanel').style.display='none';
+});
+
+// Busca
+document.getElementById('maqSearchInput').addEventListener('input',function(){
+  document.getElementById('maqSearchClear').style.display = this.value ? 'block' : 'none';
+  renderMaqResults(this.value);
+});
+document.getElementById('maqSearchInput').addEventListener('focus',function(){
+  renderMaqResults(this.value);
+});
+document.getElementById('maqSearchClear').addEventListener('click',function(){
+  document.getElementById('maqSearchInput').value='';
+  this.style.display='none';
+  renderMaqResults('');
+});
+document.getElementById('maqSelectedX').addEventListener('click', clearMaqPicker);
+
+// Fechar lista ao clicar fora
+document.addEventListener('click',function(e){
+  if(!document.getElementById('maqPicker').contains(e.target)){
+    document.getElementById('maqResults').classList.remove('open');
+  }
+});
+
+/* ── NFC ── */
+let _nfcReader = null;
+document.getElementById('btnNFC').addEventListener('click', async function(){
+  const btn = this;
+  const status = document.getElementById('maqNFCStatus');
+  if(!('NDEFReader' in window)){
+    status.textContent='⚠ NFC não suportado neste dispositivo';
+    showToast('⚠ NFC não disponível',true);
+    return;
+  }
+  if(btn.classList.contains('scanning')){
+    _nfcReader=null;
+    btn.classList.remove('scanning');
+    btn.textContent='▶ Iniciar Scan';
+    status.textContent='Leitura cancelada';
+    return;
+  }
+  try{
+    _nfcReader = new NDEFReader();
+    await _nfcReader.scan();
+    btn.classList.add('scanning');
+    btn.textContent='⏹ Parar';
+    status.textContent='📡 Aguardando tag NFC...';
+    _nfcReader.addEventListener('reading',({message})=>{
+      for(const record of message.records){
+        if(record.recordType==='text'){
+          const txt = new TextDecoder(record.encoding||'utf-8').decode(record.data).trim();
+          const match = maquinas.find(m=>
+            m.name.toLowerCase()===txt.toLowerCase()||m.id===txt||
+            m.name.toLowerCase().includes(txt.toLowerCase())
+          );
+          btn.classList.remove('scanning');
+          btn.textContent='▶ Iniciar Scan';
+          if(match){
+            selectMachine(match.id);
+            status.textContent=`✅ Identificada: ${match.name}`;
+            // Voltar para aba busca para mostrar selecionado
+            document.getElementById('maqBtnSearch').click();
+            showToast(`✅ ${match.name}`);
+          } else {
+            status.textContent=`Tag lida: "${txt}" — não encontrada`;
+            showToast(`⚠ Máquina "${txt}" não cadastrada`,true);
+          }
+        }
+      }
+    });
+    _nfcReader.addEventListener('readingerror',()=>{
+      status.textContent='⚠ Erro ao ler tag';
+      btn.classList.remove('scanning');btn.textContent='▶ Iniciar Scan';
+    });
+  }catch(e){
+    status.textContent='⚠ '+e.message;
+    btn.classList.remove('scanning');btn.textContent='▶ Iniciar Scan';
+  }
+});
+
+function renderDashboard(){
+  renderCriticalKPIs();
+  const tQ=records.length,tV=records.reduce((s,r)=>s+(r.veiculos||0),0),tT=records.reduce((s,r)=>s+(r.tempo||0),0);
+  const hoje=records.filter(r=>new Date(r.ts).toDateString()===new Date().toDateString()).length;
+  document.getElementById('dashMetrics').innerHTML=`
+    <div class="metric c-amber"><div class="metric-label">Total de quebras</div><div class="metric-value">${tQ}</div><div class="metric-sub">Todas as ocorrências</div></div>
+    <div class="metric c-red"><div class="metric-label">Veículos perdidos</div><div class="metric-value">${tV}</div><div class="metric-sub">Sem aperto acumulado</div></div>
+    <div class="metric c-blue"><div class="metric-label">Hoje</div><div class="metric-value">${hoje}</div><div class="metric-sub">Ocorrências no dia</div></div>
+    <div class="metric c-green"><div class="metric-label">Tempo parado</div><div class="metric-value">${tT}</div><div class="metric-sub">Minutos acumulados</div></div>
+  `;
+  const rm={};
+  records.forEach(r=>{if(!rm[r.maqId])rm[r.maqId]={count:0,veiculos:0};rm[r.maqId].count++;rm[r.maqId].veiculos+=(r.veiculos||0);});
+  const ranked=Object.entries(rm).map(([id,v])=>({id,...v})).sort((a,b)=>b.count-a.count);
+  const maxC=ranked.length?ranked[0].count:1;
+  const pc=['p1','p2','p3'];
+  document.getElementById('rankingList').innerHTML=ranked.length?ranked.slice(0,8).map((r,i)=>{
+    const m=maquinas.find(x=>x.id===r.id)||{name:r.id,op:''};
+    const pct=Math.round((r.count/maxC)*100);
+    return `<div class="ranking-item"><div class="rank-pos ${pc[i]||''}">${i+1}</div><div class="rank-info"><div class="rank-name">${m.name}</div><div class="rank-op">${m.op}</div></div><div class="rank-bar-col"><div class="rank-bar-bg"><div class="rank-bar-fill" style="width:${pct}%"></div></div></div><div class="rank-stats"><div class="rank-count">${r.count}</div><div class="rank-vcls">${r.veiculos} veíc.</div></div></div>`;
+  }).join(''):'<div class="empty"><div class="empty-icon">📊</div>Nenhuma quebra registrada ainda.</div>';
+  const recent=records.slice(0,7);
+  document.getElementById('recentList').innerHTML=recent.length?`<div class="table-wrap"><table><thead><tr><th>Data/Hora</th><th>Equipamento</th><th>Máquina</th><th>Tipo</th><th>Veículos</th></tr></thead><tbody>${recent.map(r=>{const m=maquinas.find(x=>x.id===r.maqId);const t=tipos.find(x=>x.id===r.tipoId);const cc={Alta:'b-red',Média:'b-amber',Baixa:'b-green'}[t?.crit]||'b-blue';const dt=new Date(r.ts);return `<tr><td style="white-space:nowrap;font-weight:500;color:var(--text)">${fmtD(dt)} ${fmtT(dt)}</td><td>${r.equip||'—'}</td><td style="font-weight:500;color:var(--text)">${m?.name||r.maqId}</td><td><span class="badge ${cc}">${t?.name||r.tipoId}</span></td><td style="font-weight:700;color:${r.veiculos>0?'var(--red)':'var(--text3)'}">${r.veiculos}</td></tr>`;}).join('')}</tbody></table></div>`:'<div class="empty"><div class="empty-icon">🗂</div>Nenhum registro ainda.</div>';
+}
+
+/* ═══════════════════ HISTÓRICO ═══════════════════ */
+document.getElementById('btnClearFilters').addEventListener('click',()=>{
+  ['filtMaquina','filtTipo','filtDate'].forEach(id=>document.getElementById(id).value='');
+  renderHistory();
+});
+document.getElementById('filtMaquina').addEventListener('change',renderHistory);
+document.getElementById('filtTipo').addEventListener('change',renderHistory);
+document.getElementById('filtDate').addEventListener('change',renderHistory);
+document.getElementById('btnPrintHist').addEventListener('click',printHistory);
+document.getElementById('btnWaHist').addEventListener('click',sendHistoryWhatsApp);
+document.getElementById('btnCsvHist').addEventListener('click',exportCSV);
+document.getElementById('btnBackupHist').addEventListener('click',exportJSON);
+
+function renderHistory(){
+  const fMaq=document.getElementById('filtMaquina').value;
+  const fTipo=document.getElementById('filtTipo').value;
+  const fDate=document.getElementById('filtDate').value;
+  let fl=[...records];
+  if(fMaq)fl=fl.filter(r=>r.maqId===fMaq);
+  if(fTipo)fl=fl.filter(r=>r.tipoId===fTipo);
+  if(fDate)fl=fl.filter(r=>r.ts.startsWith(fDate));
+  const body=document.getElementById('historyBody'),empty=document.getElementById('historyEmpty');
+  if(!fl.length){body.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  body.innerHTML=fl.map(r=>{
+    const m=maquinas.find(x=>x.id===r.maqId),t=tipos.find(x=>x.id===r.tipoId);
+    const dt=new Date(r.ts);
+    const cc={Alta:'b-red',Média:'b-amber',Baixa:'b-green'}[t?.crit]||'b-blue';
+    const tc=r.turno==='1º Turno'?'b-blue':r.turno==='3º Turno'?'b-purple':'b-amber';
+    const lc=r.lado==='Lado Direito'?'b-blue':'b-green';
+    return `<tr>
+      <td style="white-space:nowrap;font-weight:500;color:var(--text)">${fmtD(dt)}<br><span style="font-size:11px;color:var(--text3)">${fmtT(dt)}</span></td>
+      <td><span class="badge ${tc}">${r.turno}</span></td>
+      <td>${r.equip||'—'}</td>
+      <td><span class="badge ${lc}">${r.lado||'—'}</span></td>
+      <td style="font-weight:500;color:var(--text)">${m?.name||r.maqId}<br><span style="font-size:11px;font-weight:400;color:var(--text3)">${m?.op||''}</span></td>
+      <td><span class="badge ${cc}">${t?.name||r.tipoId}</span></td>
+      <td style="text-align:center;font-weight:700;color:${r.veiculos>0?'var(--red)':'var(--text3)'}">${r.veiculos}</td>
+      <td style="text-align:center">${r.tempo||'—'}</td>
+      <td style="font-size:12px;max-width:120px;color:var(--text3)">${r.obs||'—'}</td>
+      <td><div style="display:flex;gap:4px">
+        <button class="btn btn-amber btn-sm" data-id="${r.id}" data-action="edit" title="Editar">✏️</button>
+        <button class="btn btn-print btn-sm" data-id="${r.id}" data-action="print" title="Imprimir">🖨</button>
+        <button class="btn btn-wa btn-sm" data-id="${r.id}" data-action="wa" title="WhatsApp">📲</button>
+        <button class="btn btn-danger btn-sm" data-id="${r.id}" data-action="del" title="Excluir">✕</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+document.getElementById('historyBody').addEventListener('click',function(e){
+  const btn=e.target.closest('[data-action]');if(!btn)return;
+  const id=btn.dataset.id,action=btn.dataset.action;
+  if(action==='edit')openEditModal(id);
+  if(action==='print')printRecord(id);
+  if(action==='wa')sendWhatsApp(id);
+  if(action==='del'){if(!confirm('Excluir este registro?'))return;records=records.filter(r=>r.id!==id);sv(KEYS.r,records);renderHistory();showToast('Registro excluído.',true);}
+});
+
+/* ═══════════════════ MODAL EDITAR ═══════════════════ */
+function openEditModal(id){
+  const r=records.find(x=>x.id===id);if(!r)return;
+  editingId=id;
+  populateEditSelects();
+  const dt=new Date(r.ts);
+  const localIso=`${dt.getFullYear()}-${zp(dt.getMonth()+1)}-${zp(dt.getDate())}T${zp(dt.getHours())}:${zp(dt.getMinutes())}`;
+  document.getElementById('editTs').value=localIso;
+  document.getElementById('editTurno').value=r.turno;
+  document.getElementById('editEquip').value=r.equip||'';
+  document.getElementById('editLado').value=r.lado||'Lado Direito';
+  document.getElementById('editMaquina').value=r.maqId;
+  document.getElementById('editTipo').value=r.tipoId;
+  document.getElementById('editVeiculos').value=r.veiculos||0;
+  document.getElementById('editTempo').value=r.tempo||0;
+  document.getElementById('editObs').value=r.obs||'';
+  document.getElementById('editModal').classList.add('open');
+}
+
+document.getElementById('btnSaveEdit').addEventListener('click',function(){
+  const r=records.find(x=>x.id===editingId);if(!r)return;
+  const tsVal=document.getElementById('editTs').value;
+  r.ts=tsVal?new Date(tsVal).toISOString():r.ts;
+  r.turno=document.getElementById('editTurno').value;
+  r.equip=document.getElementById('editEquip').value;
+  r.lado=document.getElementById('editLado').value;
+  r.maqId=document.getElementById('editMaquina').value;
+  r.tipoId=document.getElementById('editTipo').value;
+  r.veiculos=parseInt(document.getElementById('editVeiculos').value)||0;
+  r.tempo=parseInt(document.getElementById('editTempo').value)||0;
+  r.obs=document.getElementById('editObs').value.trim();
+  sv(KEYS.r,records);
+  closeEditModal();
+  renderHistory();
+  showToast('✅ Registro atualizado!');
+});
+document.getElementById('btnCloseModal').addEventListener('click',closeEditModal);
+document.getElementById('btnCancelEdit').addEventListener('click',closeEditModal);
+document.getElementById('editModal').addEventListener('click',function(e){if(e.target===this)closeEditModal();});
+function closeEditModal(){document.getElementById('editModal').classList.remove('open');editingId=null;}
+
+/* ═══════════════════ CONFIGURAÇÕES ═══════════════════ */
+function renderConfig(){
+  // Info
+  document.getElementById('cfgSetor').value=info.setor||'';
+  document.getElementById('cfgMonitor').value=info.monitor||'';
+  document.getElementById('cfgLider').value=info.lider||'';
+  // Equip types
+  renderEquipManageList();
+  // Máquinas
+  document.getElementById('maqList').innerHTML=maquinas.length?maquinas.map(m=>`<div class="config-item"><div><div class="config-name">${m.name}</div><div class="config-meta">${m.op} · ${m.cat}</div></div><button class="btn btn-danger btn-sm" data-mid="${m.id}" data-action="delMaq">✕</button></div>`).join(''):'<div style="color:var(--text3);font-size:13px;padding:8px">Nenhuma cadastrada.</div>';
+  // Tipos
+  const ci={Alta:'🔴',Média:'🟡',Baixa:'🟢'};
+  document.getElementById('tipoList').innerHTML=tipos.length?tipos.map(t=>`<div class="config-item"><div><div class="config-name">${ci[t.crit]||''} ${t.name}</div><div class="config-meta">Criticidade: ${t.crit}</div></div><button class="btn btn-danger btn-sm" data-tid="${t.id}" data-action="delTipo">✕</button></div>`).join(''):'<div style="color:var(--text3);font-size:13px;padding:8px">Nenhum cadastrado.</div>';
+}
+
+function renderEquipManageList(){
+  // Config tab list
+  const el=document.getElementById('equipManageList');
+  el.innerHTML=equipTypes.map((e,i)=>`<div class="equip-manage-item"><span>${e}</span><button class="btn btn-danger btn-sm" data-ei="${i}" data-action="delEquip">✕</button></div>`).join('');
+  // Modal list
+  const ml=document.getElementById('equipModalList');
+  if(ml)ml.innerHTML=equipTypes.map((e,i)=>`<div class="equip-manage-item"><span>${e}</span><button class="btn btn-danger btn-sm" data-ei="${i}" data-action="delEquip">✕</button></div>`).join('');
+}
+
+// Info save
+document.getElementById('btnSaveInfo').addEventListener('click',function(){
+  info.setor=document.getElementById('cfgSetor').value.trim();
+  info.monitor=document.getElementById('cfgMonitor').value.trim();
+  info.lider=document.getElementById('cfgLider').value.trim();
+  sv(KEYS.i,info);
+  updateHeaderInfo();
+  showToast('✅ Identificação salva!');
+});
+
+// Equip add (config tab)
+document.getElementById('btnAddEquip').addEventListener('click',function(){
+  const name=document.getElementById('cfgEquipName').value.trim();
+  if(!name){showToast('⚠ Informe o nome do equipamento.',true);return;}
+  if(!equipTypes.includes(name)){equipTypes.push(name);sv(KEYS.e,equipTypes);renderEquipManageList();renderEquipToggle();}
+  document.getElementById('cfgEquipName').value='';
+  showToast('Equipamento adicionado!');
+});
+
+// Equip add (modal)
+document.getElementById('btnModalAddEquip').addEventListener('click',function(){
+  const name=document.getElementById('modalEquipName').value.trim();
+  if(!name){showToast('⚠ Informe o nome.',true);return;}
+  if(!equipTypes.includes(name)){equipTypes.push(name);sv(KEYS.e,equipTypes);renderEquipManageList();renderEquipToggle();}
+  document.getElementById('modalEquipName').value='';
+  showToast('Equipamento adicionado!');
+});
+
+// Equip manage modal
+document.getElementById('btnManageEquip').addEventListener('click',function(){
+  renderEquipManageList();
+  document.getElementById('equipModal').classList.add('open');
+});
+document.getElementById('btnCloseEquipModal').addEventListener('click',()=>document.getElementById('equipModal').classList.remove('open'));
+document.getElementById('equipModal').addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
+
+// Delete equip (delegated — both lists)
+document.addEventListener('click',function(e){
+  const btn=e.target.closest('[data-action]');if(!btn)return;
+  const action=btn.dataset.action;
+
+  if(action==='delEquip'){
+    const i=parseInt(btn.dataset.ei);
+    if(!confirm(`Remover "${equipTypes[i]}"?`))return;
+    equipTypes.splice(i,1);sv(KEYS.e,equipTypes);renderEquipManageList();renderEquipToggle();return;
+  }
+  if(action==='delMaq'){
+    const mid=btn.dataset.mid;
+    if(!confirm('Remover esta máquina?'))return;
+    maquinas=maquinas.filter(m=>m.id!==mid);sv(KEYS.m,maquinas);populateSelects();renderConfig();showToast('Máquina removida.',true);return;
+  }
+  if(action==='delTipo'){
+    const tid=btn.dataset.tid;
+    if(!confirm('Remover este tipo de quebra?'))return;
+    tipos=tipos.filter(t=>t.id!==tid);sv(KEYS.t,tipos);populateSelects();renderConfig();showToast('Tipo removido.',true);return;
+  }
+});
+
+// Add máquina
+document.getElementById('btnAddMaq').addEventListener('click',function(){
+  const name=document.getElementById('cfgMaqName').value.trim();
+  const op=document.getElementById('cfgMaqOp').value.trim();
+  let cat=document.getElementById('cfgMaqCat').value;
+  if(cat==='__custom__'){cat=document.getElementById('cfgMaqCatCustom').value.trim();if(!cat){showToast('⚠ Informe a categoria.',true);return;}}
+  if(!name){showToast('⚠ Informe o nome da máquina.',true);return;}
+  maquinas.push({id:'m_'+Date.now(),name,op,cat});sv(KEYS.m,maquinas);
+  document.getElementById('cfgMaqName').value='';document.getElementById('cfgMaqOp').value='';
+  document.getElementById('cfgMaqCatCustom').style.display='none';
+  document.getElementById('cfgMaqCat').value='Apertadeira Eletrônica';
+  populateSelects();renderConfig();showToast('Máquina adicionada!');
+});
+
+document.getElementById('cfgMaqCat').addEventListener('change',function(){
+  document.getElementById('cfgMaqCatCustom').style.display=this.value==='__custom__'?'block':'none';
+});
+
+// Add tipo
+document.getElementById('btnAddTipo').addEventListener('click',function(){
+  const name=document.getElementById('cfgTipoName').value.trim();
+  const crit=document.getElementById('cfgTipoCrit').value;
+  if(!name){showToast('⚠ Informe a descrição do tipo.',true);return;}
+  tipos.push({id:'t_'+Date.now(),name,crit});sv(KEYS.t,tipos);
+  document.getElementById('cfgTipoName').value='';
+  populateSelects();renderConfig();showToast('Tipo de quebra adicionado!');
+});
+
+// Backup/export
+document.getElementById('btnExportJson').addEventListener('click',exportJSON);
+document.getElementById('btnExportCsv').addEventListener('click',exportCSV);
+document.getElementById('btnImportJson').addEventListener('click',()=>document.getElementById('importFile').click());
+document.getElementById('btnReset').addEventListener('click',resetAll);
+document.getElementById('importFile').addEventListener('change',doImport);
+
+/* ═══════════════════ IMPRESSÃO ═══════════════════ */
+function PS(){
+  return `<style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:'Segoe UI',Arial,sans-serif;font-size:12px;color:#111;background:#fff;padding:20px;}.ph{display:flex;justify-content:space-between;align-items:flex-start;background:#1e40af;color:#fff;padding:14px 18px;border-radius:8px;margin-bottom:16px;}.pl{font-size:17px;font-weight:800;letter-spacing:.5px;}.pl span{font-size:11px;font-weight:400;opacity:.75;display:block;margin-top:3px;}.pd{font-size:11px;opacity:.75;text-align:right;}.pt{font-size:14px;font-weight:700;color:#1e40af;text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px;}.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px;}.f{background:#f7f8fb;border:1px solid #e4e8ef;border-radius:8px;padding:10px 12px;}.fl{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:#6b7280;margin-bottom:4px;}.fv{font-size:14px;font-weight:700;color:#111;}.fs{font-size:10px;color:#6b7280;margin-top:3px;}.obs{background:#fff;border:1px solid #e4e8ef;border-radius:8px;padding:10px 12px;margin-bottom:10px;}.ca{color:#dc2626;}.cm{color:#d97706;}.cb{color:#16a34a;}table{width:100%;border-collapse:collapse;font-size:11px;}th{background:#1e40af;color:#fff;padding:7px 10px;text-align:left;font-size:10px;letter-spacing:.5px;}td{padding:6px 10px;border-bottom:1px solid #f1f3f7;}tr:nth-child(even) td{background:#fafbfd;}.mb{background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:12px;text-align:center;}.mn{font-size:26px;font-weight:800;color:#1e40af;}.ml{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:#6b7280;margin-top:4px;}.ft{margin-top:18px;padding-top:10px;border-top:1px solid #e4e8ef;font-size:10px;color:#9ca3af;display:flex;justify-content:space-between;}@page{margin:12mm;}@media print{body{padding:0;}}</style>`;
+}
+function PH(title){
+  const n=new Date();
+  const sub=`${info.setor||'Fahrwerk'}${info.monitor?' · Monitor: '+info.monitor:''}${info.lider?' · Líder: '+info.lider:''}`;
+  return `<div class="ph"><div><div class="pl">MAPEAMENTO DE QUEBRAS<span>${sub} · VW Taubaté</span></div></div><div class="pd">Impresso em<br>${fmtD(n)} às ${fmtT(n)}</div></div><div class="pt">${title}</div>`;
+}
+function PF(){return `<div class="ft"><span>Setor ${info.setor||'Fahrwerk'} · Mapeamento de Quebras</span><span>v4.0</span></div>`;}
+function critLabel(c){const m={Alta:'ca',Média:'cm',Baixa:'cb'};return `<span class="${m[c]||''}">${c||''}</span>`;}
+function openPrint(html){const w=window.open('','_blank','width=920,height=720');w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">${PS()}</head><body>${html}${PF()}</body></html>`);w.document.close();w.onload=()=>w.print();}
+
+function printRecord(id){
+  const r=records.find(x=>x.id===id);if(!r){showToast('⚠ Registro não encontrado.',true);return;}
+  const m=maquinas.find(x=>x.id===r.maqId)||{name:r.maqId,op:'',cat:''};
+  const t=tipos.find(x=>x.id===r.tipoId)||{name:r.tipoId,crit:''};
+  const dt=new Date(r.ts);
+  openPrint(`${PH('Registro de Ocorrência de Quebra')}
+    <div class="g3"><div class="f"><div class="fl">Data / Hora</div><div class="fv">${fmtD(dt)} ${fmtT(dt)}</div><div class="fs">Turno: ${r.turno}</div></div><div class="f"><div class="fl">Equipamento</div><div class="fv">${r.equip||'—'}</div><div class="fs">${r.lado||'—'}</div></div><div class="f"><div class="fl">Máquina</div><div class="fv">${m.name}</div><div class="fs">${m.op}</div></div></div>
+    <div class="g2"><div class="f"><div class="fl">Tipo de Quebra</div><div class="fv">${t.name}</div><div class="fs">Criticidade: ${critLabel(t.crit)}</div></div><div class="g2" style="gap:8px"><div class="f"><div class="fl">Veículos</div><div class="fv" style="font-size:26px;${r.veiculos>0?'color:#dc2626':'color:#16a34a'}">${r.veiculos}</div></div><div class="f"><div class="fl">Tempo Parado</div><div class="fv" style="font-size:20px">${r.tempo||0} min</div></div></div></div>
+    ${r.obs?`<div class="obs"><div class="fl" style="margin-bottom:5px">Observação</div>${r.obs}</div>`:''}
+    <div class="g2" style="margin-top:14px"><div class="f"><div class="fl">Monitor</div><div class="fv">${info.monitor||'—'}</div></div><div class="f"><div class="fl">Assinatura / Visto</div><div style="height:28px;border-bottom:1px solid #aaa;margin-top:6px"></div></div></div>`);
+}
+
+function printDashboard(){
+  const tQ=records.length,tV=records.reduce((s,r)=>s+(r.veiculos||0),0),tT=records.reduce((s,r)=>s+(r.tempo||0),0);
+  const hoje=records.filter(r=>new Date(r.ts).toDateString()===new Date().toDateString()).length;
+  const rm={};records.forEach(r=>{if(!rm[r.maqId])rm[r.maqId]={c:0,v:0};rm[r.maqId].c++;rm[r.maqId].v+=(r.veiculos||0);});
+  const ranked=Object.entries(rm).map(([id,v])=>({id,...v})).sort((a,b)=>b.c-a.c);
+  const tm={};records.forEach(r=>{if(!tm[r.tipoId])tm[r.tipoId]=0;tm[r.tipoId]++;});
+  const typeRank=Object.entries(tm).map(([id,c])=>({id,c})).sort((a,b)=>b.c-a.c);
+  openPrint(`${PH('Dashboard · Resumo Mapeamento de Quebras')}
+    <div class="g2" style="margin-bottom:14px"><div class="mb"><div class="mn">${tQ}</div><div class="ml">Total de quebras</div></div><div class="mb"><div class="mn" style="color:#dc2626">${tV}</div><div class="ml">Veículos perdidos</div></div><div class="mb"><div class="mn" style="color:#1a56db">${hoje}</div><div class="ml">Hoje</div></div><div class="mb"><div class="mn" style="color:#16a34a">${tT}</div><div class="ml">Minutos parados</div></div></div>
+    <div class="g2" style="gap:16px;align-items:start;margin-bottom:14px">
+      <div><div style="font-weight:700;text-transform:uppercase;font-size:10px;letter-spacing:.8px;color:#6b7280;margin-bottom:6px">Ranking · Máquinas</div><table><thead><tr><th>#</th><th>Máquina</th><th>Operação</th><th>Qtd.</th><th>Veíc.</th></tr></thead><tbody>${ranked.map((r,i)=>{const m=maquinas.find(x=>x.id===r.id)||{name:r.id,op:''};return `<tr><td><b>${i+1}</b></td><td>${m.name}</td><td>${m.op}</td><td><b>${r.c}</b></td><td>${r.v}</td></tr>`;}).join('')}</tbody></table></div>
+      <div><div style="font-weight:700;text-transform:uppercase;font-size:10px;letter-spacing:.8px;color:#6b7280;margin-bottom:6px">Ranking · Tipos de quebra</div><table><thead><tr><th>#</th><th>Tipo</th><th>Crit.</th><th>Qtd.</th></tr></thead><tbody>${typeRank.map((r,i)=>{const t=tipos.find(x=>x.id===r.id)||{name:r.id,crit:''};return `<tr><td><b>${i+1}</b></td><td>${t.name}</td><td>${critLabel(t.crit)}</td><td><b>${r.c}</b></td></tr>`;}).join('')}</tbody></table></div>
+    </div>
+    <div style="font-weight:700;text-transform:uppercase;font-size:10px;letter-spacing:.8px;color:#6b7280;margin-bottom:6px">Últimas 10 ocorrências</div>
+    <table><thead><tr><th>Data/Hora</th><th>Turno</th><th>Equipamento</th><th>Lado</th><th>Máquina</th><th>Tipo</th><th>Crit.</th><th>Veíc.</th><th>Tempo</th></tr></thead><tbody>${records.slice(0,10).map(r=>{const m=maquinas.find(x=>x.id===r.maqId)||{name:r.maqId};const t=tipos.find(x=>x.id===r.tipoId)||{name:r.tipoId,crit:''};const dt=new Date(r.ts);return `<tr><td>${fmtD(dt)} ${fmtT(dt)}</td><td>${r.turno}</td><td>${r.equip||'—'}</td><td>${r.lado||'—'}</td><td>${m.name}</td><td>${t.name}</td><td>${critLabel(t.crit)}</td><td>${r.veiculos}</td><td>${r.tempo||0}min</td></tr>`;}).join('')}</tbody></table>`);
+}
+
+function printHistory(){
+  const fMaq=document.getElementById('filtMaquina').value,fTipo=document.getElementById('filtTipo').value,fDate=document.getElementById('filtDate').value;
+  let fl=[...records];
+  if(fMaq)fl=fl.filter(r=>r.maqId===fMaq);if(fTipo)fl=fl.filter(r=>r.tipoId===fTipo);if(fDate)fl=fl.filter(r=>r.ts.startsWith(fDate));
+  if(!fl.length){showToast('⚠ Nenhum registro para imprimir.',true);return;}
+  const tV=fl.reduce((s,r)=>s+(r.veiculos||0),0),tT=fl.reduce((s,r)=>s+(r.tempo||0),0);
+  const mL=fMaq?(maquinas.find(x=>x.id===fMaq)||{name:fMaq}).name:'Todas';
+  const tL=fTipo?(tipos.find(x=>x.id===fTipo)||{name:fTipo}).name:'Todos';
+  openPrint(`${PH('Histórico de Quebras')}
+    <div class="g3" style="margin-bottom:10px"><div class="f"><div class="fl">Filtro · Máquina</div><div class="fv" style="font-size:13px">${mL}</div></div><div class="f"><div class="fl">Filtro · Tipo</div><div class="fv" style="font-size:13px">${tL}</div></div><div class="f"><div class="fl">Filtro · Data</div><div class="fv" style="font-size:13px">${fDate||'—'}</div></div></div>
+    <div class="g3" style="margin-bottom:12px"><div class="mb"><div class="mn">${fl.length}</div><div class="ml">Registros</div></div><div class="mb"><div class="mn" style="color:#dc2626">${tV}</div><div class="ml">Veículos perdidos</div></div><div class="mb"><div class="mn" style="color:#16a34a">${tT}</div><div class="ml">Minutos parados</div></div></div>
+    <table><thead><tr><th>Data</th><th>Hora</th><th>Turno</th><th>Equipamento</th><th>Lado</th><th>Máquina</th><th>Tipo de Quebra</th><th>Crit.</th><th>Veíc.</th><th>Tempo</th><th>Obs.</th></tr></thead><tbody>${fl.map(r=>{const m=maquinas.find(x=>x.id===r.maqId)||{name:r.maqId,op:''};const t=tipos.find(x=>x.id===r.tipoId)||{name:r.tipoId,crit:''};const dt=new Date(r.ts);return `<tr><td>${fmtD(dt)}</td><td>${fmtT(dt)}</td><td>${r.turno}</td><td>${r.equip||'—'}</td><td>${r.lado||'—'}</td><td>${m.name}</td><td>${t.name}</td><td>${critLabel(t.crit)}</td><td style="${r.veiculos>0?'color:#dc2626;font-weight:700':''}">${r.veiculos}</td><td>${r.tempo||0}</td><td style="font-size:10px">${r.obs||'—'}</td></tr>`;}).join('')}</tbody></table>`);
+}
+
+/* ═══════════════════ WHATSAPP ═══════════════════ */
+function sendWhatsApp(id){
+  const r=records.find(x=>x.id===id);if(!r)return;
+  const m=maquinas.find(x=>x.id===r.maqId)||{name:r.maqId,op:'',cat:''};
+  const t=tipos.find(x=>x.id===r.tipoId)||{name:r.tipoId,crit:''};
+  const dt=new Date(r.ts);
+  const icon=t.crit==='Alta'?'🔴':t.crit==='Média'?'🟡':'🟢';
+  const msg=`⚡ *MAPEAMENTO DE QUEBRAS · FAHRWERK*\nVW Taubaté | ${fmtD(dt)} ${fmtT(dt)}\n`+
+    (info.monitor?`👤 Monitor: ${info.monitor}\n`:'')+
+    `─────────────────────\n🔩 *Equipamento:* ${r.equip||'—'} · ${r.lado||'—'}\n🔧 *Máquina:* ${m.name}\n📍 *Operação:* ${m.op}\n${icon} *Tipo de Quebra:* ${t.name}\n   Criticidade: *${t.crit}*\n─────────────────────\n🚗 *Veículos perdidos:* ${r.veiculos}\n⏱ *Tempo parado:* ${r.tempo||0} min\n🏭 *Turno:* ${r.turno}\n`+
+    (r.obs?`📝 *Obs:* ${r.obs}\n`:'')+`─────────────────────\n_Monitor · Setor ${info.setor||'Fahrwerk'}_`;
+  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`,'_blank');
+}
+
+function sendDashboardWhatsApp(){
+  const tQ=records.length,tV=records.reduce((s,r)=>s+(r.veiculos||0),0);
+  const hoje=records.filter(r=>new Date(r.ts).toDateString()===new Date().toDateString()).length;
+  const tT=records.reduce((s,r)=>s+(r.tempo||0),0);
+  const rm={};records.forEach(r=>{if(!rm[r.maqId])rm[r.maqId]=0;rm[r.maqId]++;});
+  const ranked=Object.entries(rm).map(([id,c])=>({id,c})).sort((a,b)=>b.c-a.c).slice(0,3);
+  const now=new Date();
+  const medals=['🥇','🥈','🥉'];
+  const rankTxt=ranked.map((r,i)=>{const m=maquinas.find(x=>x.id===r.id)||{name:r.id};return `${medals[i]} ${m.name}: ${r.c} quebra(s)`;}).join('\n');
+  const msg=`📊 *MAPEAMENTO DE QUEBRAS · FAHRWERK*\nVW Taubaté | ${fmtD(now)} ${fmtT(now)}\n`+
+    (info.monitor?`👤 Monitor: ${info.monitor} | Líder: ${info.lider||'—'}\n`:'')+
+    `─────────────────────\n🔢 *Total de quebras:* ${tQ}\n🚗 *Veículos perdidos:* ${tV}\n📅 *Hoje:* ${hoje} ocorrência(s)\n⏱ *Tempo parado:* ${tT} min\n─────────────────────\n*🏆 Top 3 · Máquinas:*\n${rankTxt}\n─────────────────────\n_Fahrwerk · Mapeamento de Quebras v4.0_`;
+  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`,'_blank');
+}
+
+function sendHistoryWhatsApp(){
+  const fMaq=document.getElementById('filtMaquina').value,fTipo=document.getElementById('filtTipo').value,fDate=document.getElementById('filtDate').value;
+  let fl=[...records];
+  if(fMaq)fl=fl.filter(r=>r.maqId===fMaq);if(fTipo)fl=fl.filter(r=>r.tipoId===fTipo);if(fDate)fl=fl.filter(r=>r.ts.startsWith(fDate));
+  if(!fl.length){showToast('⚠ Nenhum registro nos filtros.',true);return;}
+  const tV=fl.reduce((s,r)=>s+(r.veiculos||0),0);
+  const now=new Date();
+  const linhas=fl.slice(0,10).map(r=>{const m=maquinas.find(x=>x.id===r.maqId)||{name:r.maqId};const t=tipos.find(x=>x.id===r.tipoId)||{name:r.tipoId};const dt=new Date(r.ts);return `• ${fmtD(dt)} ${fmtT(dt)} | ${r.equip||'—'} | ${m.name} | ${t.name} | ${r.veiculos} veíc.`;}).join('\n');
+  const msg=`🗂 *HISTÓRICO FAHRWERK · MAPEAMENTO DE QUEBRAS*\nVW Taubaté | ${fmtD(now)} ${fmtT(now)}\n─────────────────────\n📋 *${fl.length} registro(s)* | ${tV} veículo(s) perdido(s)\n─────────────────────\n${linhas}${fl.length>10?`\n_...e mais ${fl.length-10} registro(s)_`:''}\n─────────────────────\n_Fahrwerk · Mapeamento de Quebras v4.0_`;
+  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`,'_blank');
+}
+
+/* ═══════════════════ EXPORT / IMPORT ═══════════════════ */
+function exportJSON(){
+  localStorage.setItem('qm_lastExport',new Date().toISOString());
+  const data={records,maquinas,tipos,equipTypes,info,exportedAt:new Date().toISOString(),version:'4.0'};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=`quebra_monitor_backup_${new Date().toISOString().slice(0,10)}.json`;a.click();
+  showToast('✅ Backup salvo!');
+}
+function exportCSV(){
+  const rows=[['Data','Hora','Turno','Equipamento','Lado','Maquina','Operacao','Tipo Quebra','Criticidade','Veiculos','Tempo Min','Observacao']];
+  records.forEach(r=>{const m=maquinas.find(x=>x.id===r.maqId)||{};const t=tipos.find(x=>x.id===r.tipoId)||{};const dt=new Date(r.ts);rows.push([fmtD(dt),fmtT(dt),r.turno,r.equip||'',r.lado||'',m.name||r.maqId,m.op||'',t.name||r.tipoId,t.crit||'',r.veiculos||0,r.tempo||0,`"${(r.obs||'').replace(/"/g,'""')}"`]);});
+  const csv=rows.map(r=>r.join(';')).join('\n');
+  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`quebras_${new Date().toISOString().slice(0,10)}.csv`;a.click();
+}
+function doImport(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{const d=JSON.parse(ev.target.result);
+      if(d.records){records=d.records;sv(KEYS.r,records);}
+      if(d.maquinas){maquinas=d.maquinas;sv(KEYS.m,maquinas);}
+      if(d.tipos){tipos=d.tipos;sv(KEYS.t,tipos);}
+      if(d.equipTypes){equipTypes=d.equipTypes;sv(KEYS.e,equipTypes);}
+      if(d.info){info=d.info;sv(KEYS.i,info);}
+      populateSelects();renderEquipToggle();updateHeaderInfo();
+      showToast('✅ Dados importados com sucesso!');
+    }catch{showToast('⚠ Arquivo inválido.',true);}
+  };
+  reader.readAsText(file);e.target.value='';
+}
+function resetAll(){
+  if(!confirm('⚠ Apagar TODOS os dados permanentemente?'))return;
+  if(!confirm('Confirmar exclusão total?'))return;
+  Object.values(KEYS).forEach(k=>localStorage.removeItem(k));
+  location.reload();
+}
+
+/* ═══════════════════ MODAL BACKUP ═══════════════════ */
+document.getElementById('btnCloseBackup').addEventListener('click', ()=>document.getElementById('backupModal').classList.remove('open'));
+document.getElementById('backupModal').addEventListener('click', function(e){if(e.target===this)this.classList.remove('open');});
+document.getElementById('btnBackupJson').addEventListener('click', ()=>{exportJSON();});
+document.getElementById('btnBackupCsvModal').addEventListener('click', ()=>{exportCSV();});
+document.getElementById('btnRestoreJson').addEventListener('click', ()=>document.getElementById('importFile').click());
+
+function openBackupModal(){
+  // Calcular tamanho
+  let total=0;
+  Object.values(KEYS).forEach(k=>{const v=localStorage.getItem(k)||'';total+=v.length;});
+  const kb=(total/1024).toFixed(1);
+  const pct=Math.min(Math.round((total/(5*1024*1024))*100),100);
+  document.getElementById('storageSize').textContent=kb+' KB';
+  document.getElementById('storageBar').style.width=Math.max(pct,2)+'%';
+  document.getElementById('storageDetail').textContent=`${records.length} registros · ${maquinas.length} máquinas · ${tipos.length} tipos · ${equipTypes.length} equipamentos`;
+  // Aviso se nunca exportou (heurística simples)
+  const lastExport=localStorage.getItem('qm_lastExport');
+  const warnEl=document.getElementById('storageWarning');
+  if(!lastExport){warnEl.style.display='block';}else{warnEl.style.display='none';}
+  document.getElementById('backupModal').classList.add('open');
+}
+
+// Marcar data do último export
+const _origExportJSON=exportJSON;
+
+function showToast(msg,isErr=false){
+  const el=document.getElementById('toast');el.textContent=msg;el.className='toast show'+(isErr?' err':'');setTimeout(()=>el.className='toast',3000);
+}
+</script>
+</body>
+</html>
